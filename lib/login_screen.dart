@@ -1,5 +1,8 @@
+// lib/login_screen.dart
 import 'package:flutter/material.dart';
 import 'password_list_screen.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -12,9 +15,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _onLogin() {
     if (_usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+      String secureHash = _passwordController.text + "__mypwbox__" + _usernameController.text;
+      for(int i=0;i< 100;i++){
+        secureHash = sha1.convert(utf8.encode(secureHash)).toString();
+      }
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PasswordListScreen()),
+        MaterialPageRoute(builder: (context) => PasswordListScreen(username: _usernameController.text, secureHash: secureHash))
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('请输入用户名和密码')));

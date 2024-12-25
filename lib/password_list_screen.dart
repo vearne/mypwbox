@@ -1,46 +1,130 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'database_helper.dart';
+import 'package:path/path.dart' as path; // Rename the import to avoid conflict
+import 'package:path_provider/path_provider.dart';
 
 class PasswordListScreen extends StatefulWidget {
+  final String username;
+  final String secureHash;
+
+  PasswordListScreen({required this.username, required this.secureHash});
+
   @override
   _PasswordListScreenState createState() => _PasswordListScreenState();
 }
 
 class _PasswordListScreenState extends State<PasswordListScreen> {
   late Database _database;
-  List<Map<String, dynamic>> _passwords = [];
   List<Map<String, dynamic>> _filteredPasswords = [];
   final TextEditingController _searchController = TextEditingController();
+
+  int _currentPage = 0;
+  static const int _pageSize = 5;
+  bool _hasNextPage = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeDatabase();
     _searchController.addListener(_filterPasswords);
+    _initializeDatabase();
   }
 
   Future<void> _initializeDatabase() async {
-    _database = await DatabaseHelper.getDatabase();
+    final directory = await getApplicationDocumentsDirectory();
+    final dbPath = path.join(directory.path,
+        '${widget.username}_encrypted_password_manager.db'); // Use path.join
+
+    bool databaseExists = await databaseFactory.databaseExists(dbPath);
+
+    if (!databaseExists) {
+      bool shouldCreate = await showDialog(
+        context: context, // Use BuildContext here
+        builder: (context) {
+          return AlertDialog(
+            title: Text('数据库不存在'),
+            content: Text('是否创建新的数据库？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('创建'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (!shouldCreate) {
+        Navigator.pop(context); // Use BuildContext here
+        return;
+      }
+    }
+
+    _database = await openDatabase(
+      dbPath,
+      password: "${widget.secureHash}", // 加密的密码
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE passwords (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            account TEXT NOT NULL,
+            password TEXT NOT NULL,
+            comment TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        ''');
+      },
+    );
+
     _loadPasswords();
   }
 
   Future<void> _loadPasswords() async {
-    final passwords = await _database.query('passwords');
+    final offset = _currentPage * _pageSize;
+    final query = _searchController.text.toLowerCase();
+    List<Map<String, Object?>> passwords;
+    int totalCount;
+
+    if (query.isEmpty) {
+      passwords = await _database.query(
+        'passwords',
+        orderBy: 'id ASC',
+        limit: _pageSize,
+        offset: offset,
+      );
+      totalCount = Sqflite.firstIntValue(await _database.rawQuery('SELECT COUNT(*) FROM passwords')) ?? 0;
+    } else {
+      passwords = await _database.query(
+        'passwords',
+        where: 'LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
+        whereArgs: ['%$query%', '%$query%'],
+        orderBy: 'id ASC',
+        limit: _pageSize,
+        offset: offset,
+      );
+      totalCount = Sqflite.firstIntValue(await _database.rawQuery(
+        'SELECT COUNT(*) FROM passwords WHERE LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
+        ['%$query%', '%$query%'],
+      )) ?? 0;
+    }
+
     setState(() {
-      _passwords = passwords;
       _filteredPasswords = passwords;
+      _hasNextPage = (offset + _pageSize) < totalCount;
     });
   }
 
-  void _filterPasswords() {
-    final query = _searchController.text.toLowerCase();
+  Future<void> _filterPasswords() async {
     setState(() {
-      _filteredPasswords = _passwords.where((password) {
-        return password['title'].toLowerCase().contains(query) ||
-            password['account'].toLowerCase().contains(query);
-      }).toList();
+      _currentPage = 0; // Reset to the first page when filtering
     });
+    _loadPasswords();
   }
 
   Future<void> _addPassword(Map<String, dynamic> newPassword) async {
@@ -147,6 +231,50 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
     );
   }
 
+  void _changePage(int newPage) {
+    if (newPage >= 0 && (_hasNextPage || newPage < _currentPage)) {
+      setState(() {
+        _currentPage = newPage;
+      });
+      _loadPasswords();
+    }
+  }
+
+  void _showPasswordDetails(Map<String, dynamic> password) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Password Details'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Title: ${password['title']}'),
+                SizedBox(height: 10),
+                Text('Account: ${password['account']}'),
+                SizedBox(height: 10),
+                Text('Password: ${password['password']}'),
+                SizedBox(height: 10),
+                Text('Comment: ${password['comment']}'),
+                SizedBox(height: 10),
+                Text('Created At: ${password['created_at']}'),
+                SizedBox(height: 10),
+                Text('Updated At: ${password['updated_at']}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,6 +309,10 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
+                          icon: Icon(Icons.visibility),
+                          onPressed: () => _showPasswordDetails(password),
+                        ),
+                        IconButton(
                           icon: Icon(Icons.edit),
                           onPressed: () => _showAddPasswordDialog(passwordToUpdate: password),
                         ),
@@ -194,6 +326,20 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
                 );
               },
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left),
+                onPressed: _currentPage > 0 ? () => _changePage(_currentPage - 1) : null,
+              ),
+              Text('Page ${_currentPage + 1}'),
+              IconButton(
+                icon: Icon(Icons.chevron_right),
+                onPressed: _hasNextPage ? () => _changePage(_currentPage + 1) : null,
+              ),
+            ],
           ),
         ],
       ),
