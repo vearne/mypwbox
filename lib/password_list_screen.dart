@@ -1,3 +1,4 @@
+import 'package:otp/otp.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path; // Rename the import to avoid conflict
@@ -63,26 +64,48 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
       }
     }
 
-    _database = await openDatabase(
-      dbPath,
-      password: "${widget.secureHash}", // 加密的密码
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE passwords (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            account TEXT NOT NULL,
-            password TEXT NOT NULL,
-            comment TEXT,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-          )
-        ''');
-      },
-    );
-
-    _loadPasswords();
+    try {
+      _database = await openDatabase(
+        dbPath,
+        password: "${widget.secureHash}",
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE passwords (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              title TEXT NOT NULL,
+              account TEXT NOT NULL,
+              password TEXT NOT NULL,
+              comment TEXT,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+        },
+      );
+      _loadPasswords();
+    } catch (e) {
+      print('Database open failed, Incorrect username or password: $e');
+      // 密码错误，显示弹窗提示用户
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('错误'),
+            content: Text('输入的用户名或密码有误，请重试。'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 关闭弹窗
+                  Navigator.pushReplacementNamed(context, '/login'); // 跳转回登录页面
+                },
+                child: Text('确定'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   Future<void> _loadPasswords() async {
@@ -240,36 +263,126 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
     }
   }
 
+  String _formatDate(String dateString) {
+    return dateString.substring(0, 19).replaceAll("T", " ");
+  }
+
   void _showPasswordDetails(Map<String, dynamic> password) {
+    bool _isPasswordVisible = false;
+    bool _isTotp = false;
+    String _totpCode = '';
+    int _timeRemaining = 30;
+
+    // 判断是否是TOTP密钥
+    if (password['password'].startsWith('otpauth://totp/')) {
+      _isTotp = true;
+      // 从 password 字段中提取 TOTP 密钥
+      final uri = Uri.parse(password['password']);
+      final secret = uri.queryParameters['secret'];
+      if (secret != null) {
+        _totpCode = OTP.generateTOTPCodeString(
+          secret,
+          DateTime.now().millisecondsSinceEpoch,
+          interval: 30,
+        );
+        _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Password Details'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Title: ${password['title']}'),
-                SizedBox(height: 10),
-                Text('Account: ${password['account']}'),
-                SizedBox(height: 10),
-                Text('Password: ${password['password']}'),
-                SizedBox(height: 10),
-                Text('Comment: ${password['comment']}'),
-                SizedBox(height: 10),
-                Text('Created At: ${password['created_at']}'),
-                SizedBox(height: 10),
-                Text('Updated At: ${password['updated_at']}'),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (_isTotp) {
+              // 启动倒计时
+              Future.delayed(Duration(seconds: 1), () {
+                if (_timeRemaining > 0) {
+                  setState(() {
+                    _timeRemaining--;
+                  });
+                } else {
+                  setState(() {
+                    _timeRemaining = 30;
+                    final secret = Uri.parse(password['password']).queryParameters['secret'];
+                    if (secret != null) {
+                      _totpCode = OTP.generateTOTPCodeString(
+                        secret,
+                        DateTime.now().millisecondsSinceEpoch,
+                        interval: 30,
+                      );
+                    }
+                  });
+                }
+              });
+            }
+
+            return AlertDialog(
+              title: Text('Password Details'),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Title: ${password['title']}'),
+                    SizedBox(height: 10),
+                    Text('Account: ${password['account']}'),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text('Password: ${_isPasswordVisible
+                            ? password['password']
+                            : '********'}'),
+                        IconButton(
+                          icon: Icon(
+                              _isPasswordVisible ? Icons.visibility_off : Icons
+                                  .visibility),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Text('Comment: ${password['comment']}'),
+                    SizedBox(height: 10),
+                    Text('Created At: ${_formatDate(password['created_at'])}'),
+                    SizedBox(height: 10),
+                    Text('Updated At: ${_formatDate(password['updated_at'])}'),
+                    if (_isTotp) ...[
+                      SizedBox(height: 20),
+                      Text('TOTP Code: $_totpCode'),
+                      SizedBox(height: 10),
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              value: _timeRemaining / 30,
+                              strokeWidth: 4,
+                            ),
+                            Text(
+                              '$_timeRemaining',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Close'),
+                ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Close'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
