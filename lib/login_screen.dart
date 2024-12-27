@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'password_list_screen.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -25,6 +28,54 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
+    }
+  }
+
+  Future<void> _createDatabase() async {
+    if (_usernameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('请输入用户名')));
+      return;
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    final dbPath = path.join(directory.path,
+        '${_usernameController.text}_encrypted_password_manager.db');
+
+    bool databaseExists = await databaseFactory.databaseExists(dbPath);
+
+    if (databaseExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('数据库已存在')));
+      return;
+    }
+
+    try {
+      await openDatabase(
+        dbPath,
+        password: _passwordController.text.isNotEmpty
+            ? _passwordController.text
+            : null,
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE passwords (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              title TEXT NOT NULL,
+              account TEXT NOT NULL,
+              password TEXT NOT NULL,
+              comment TEXT,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+          ''');
+        },
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('数据库创建成功')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('数据库创建失败: $e')));
     }
   }
 
@@ -51,6 +102,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: _onLogin,
               child: Text('登录'),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _createDatabase,
+              child: Text('创建数据库'),
             ),
           ],
         ),
