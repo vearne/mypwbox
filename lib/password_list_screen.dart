@@ -1,8 +1,11 @@
+import 'package:minio/io.dart';
 import 'package:otp/otp.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path; // Rename the import to avoid conflict
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:minio/minio.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -22,6 +25,7 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
   int _currentPage = 0;
   static const int _pageSize = 5;
   bool _hasNextPage = false;
+  bool _isStale = false;
 
   @override
   void initState() {
@@ -152,16 +156,25 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   Future<void> _addPassword(Map<String, dynamic> newPassword) async {
     await _database.insert('passwords', newPassword);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
   Future<void> _updatePassword(int id, Map<String, dynamic> updatedPassword) async {
     await _database.update('passwords', updatedPassword, where: 'id = ?', whereArgs: [id]);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
   Future<void> _deletePassword(int id) async {
     await _database.delete('passwords', where: 'id = ?', whereArgs: [id]);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
@@ -474,7 +487,42 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   @override
   void dispose() {
+    if (_isStale) {
+      _uploadDatabase();
+    }
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _uploadDatabase() async {
+    final prefs = await SharedPreferences.getInstance();
+    final offline = prefs.getBool('offline') ?? false;
+
+    if (!offline) {
+      final endpoint = prefs.getString('endpoint') ?? '';
+      final accessKeyID = prefs.getString('accessKeyID') ?? '';
+      final secretAccessKey = prefs.getString('secretAccessKey') ?? '';
+      final bucketName = prefs.getString('bucketName') ?? '';
+      final dirpath = prefs.getString('dirpath') ?? '';
+
+      final minio = Minio(
+        endPoint: endpoint,
+        accessKey: accessKeyID,
+        secretKey: secretAccessKey,
+        useSSL: true, // 如果使用 HTTPS，设置为 true
+      );
+
+      final directory = await getApplicationDocumentsDirectory();
+      final dbPath = path.join(
+          directory.path, '${widget.username}_encrypted_password_manager.db');
+
+      try {
+        await minio.fPutObject(bucketName,
+            '$dirpath/${widget.username}_encrypted_password_manager.db',
+            dbPath);
+      } catch (e) {
+        print('Failed to upload database to S3: $e');
+      }
+    }
   }
 }
