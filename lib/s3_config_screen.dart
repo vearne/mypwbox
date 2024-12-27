@@ -9,7 +9,7 @@ class S3ConfigScreen extends StatefulWidget {
 
 class _S3ConfigScreenState extends State<S3ConfigScreen> {
   final _formKey = GlobalKey<FormState>();
-  bool _offline = false;
+  bool _offline = true;
   String _endpoint = '';
   String _accessKeyID = '';
   String _secretAccessKey = '';
@@ -25,12 +25,12 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
   Future<void> _loadConfig() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _offline = prefs.getBool('offline') ?? false;
+      _offline = prefs.getBool('offline') ?? true;
       _endpoint = prefs.getString('endpoint') ?? '';
       _accessKeyID = prefs.getString('accessKeyID') ?? '';
       _secretAccessKey = prefs.getString('secretAccessKey') ?? '';
-      _dirpath = prefs.getString('dirpath') ?? '';
       _bucketName = prefs.getString('bucketName') ?? '';
+      _dirpath = prefs.getString('dirpath') ?? '';
     });
   }
 
@@ -64,33 +64,35 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
                   });
                 },
               ),
-              TextFormField(
-                initialValue: _endpoint,
-                decoration: InputDecoration(labelText: 'Endpoint'),
-                onSaved: (value) => _endpoint = value ?? '',
-              ),
-              TextFormField(
-                initialValue: _accessKeyID,
-                decoration: InputDecoration(labelText: 'Access Key ID'),
-                onSaved: (value) => _accessKeyID = value ?? '',
-              ),
-              TextFormField(
-                initialValue: _secretAccessKey,
-                decoration: InputDecoration(labelText: 'Secret Access Key'),
-                onSaved: (value) => _secretAccessKey = value ?? '',
-              ),
-              TextFormField(
-                initialValue: _bucketName,
-                decoration: InputDecoration(labelText: 'bucket name'),
-                onSaved: (value) => _bucketName = value ?? '',
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                initialValue: _dirpath,
-                decoration: InputDecoration(labelText: '目录路径'),
-                onSaved: (value) => _dirpath = value ?? '',
-              ),
-              SizedBox(height: 20),
+              if (!_offline) ...[
+                TextFormField(
+                  initialValue: _endpoint,
+                  decoration: InputDecoration(labelText: 'Endpoint'),
+                  onSaved: (value) => _endpoint = value ?? '',
+                ),
+                TextFormField(
+                  initialValue: _accessKeyID,
+                  decoration: InputDecoration(labelText: 'Access Key ID'),
+                  onSaved: (value) => _accessKeyID = value ?? '',
+                ),
+                TextFormField(
+                  initialValue: _secretAccessKey,
+                  decoration: InputDecoration(labelText: 'Secret Access Key'),
+                  onSaved: (value) => _secretAccessKey = value ?? '',
+                ),
+                TextFormField(
+                  initialValue: _bucketName,
+                  decoration: InputDecoration(labelText: 'bucket name'),
+                  onSaved: (value) => _bucketName = value ?? '',
+                ),
+                SizedBox(height: 20),
+                TextFormField(
+                  initialValue: _dirpath,
+                  decoration: InputDecoration(labelText: '目录路径'),
+                  onSaved: (value) => _dirpath = value ?? '',
+                ),
+                SizedBox(height: 20),
+              ],
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {

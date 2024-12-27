@@ -488,6 +488,7 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
   @override
   void dispose() {
     if (_isStale) {
+      print("Uploading database to S3...");
       _uploadDatabase();
     }
     _searchController.dispose();

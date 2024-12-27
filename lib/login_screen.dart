@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 's3_config_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -23,8 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
         secureHash = sha1.convert(utf8.encode(secureHash)).toString();
       }
       Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => PasswordListScreen(username: _usernameController.text, secureHash: secureHash))
+          context,
+          MaterialPageRoute(builder: (context) => PasswordListScreen(username: _usernameController.text, secureHash: secureHash))
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
@@ -82,7 +83,20 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('登录')),
+      appBar: AppBar(
+        title: Text('登录'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => S3ConfigScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

@@ -4,7 +4,7 @@ import 'package:minio/minio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'login_screen.dart';
 import 's3_config_screen.dart';
-import 'dart:io'; // 导入 dart:io，使用 File 类
+import 'dart:io';
 
 void main() async {
   // 确保 Flutter 框架初始化完成
@@ -27,12 +27,14 @@ void main() async {
       endPoint: endpoint,
       accessKey: accessKeyID,
       secretKey: secretAccessKey,
-      useSSL: true, // 如果使用 HTTPS，设置为 true
+      useSSL: true,
+      // enableTrace: true,
     );
 
     try {
       // 列出指定路径下的所有文件
-      await for (var result in minio.listObjects(bucketName, prefix: dirpath)) {
+      await for (var result in minio.listObjects(bucketName,
+          prefix: dirpath, recursive: true)) {
         for (var object in result.objects) {
           // 下载文件到本地
           if (object.key != null) { // 检查 object.key 是否为空
@@ -69,8 +71,8 @@ class MyApp extends StatelessWidget {
       ),
       home: LoginScreen(), // 默认显示登录界面
       routes: {
-        '/s3config': (context) => S3ConfigScreen(), // S3 配置界面
         '/login': (context) => LoginScreen(), // 登录界面
+        '/s3config': (context) => S3ConfigScreen(), // S3 配置界面
       },
     );
   }
