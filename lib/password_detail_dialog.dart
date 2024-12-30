@@ -20,6 +20,20 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
   int _timeRemaining = 30;
   String _totpCode = "";
 
+
+  Algorithm getAlgorithm(String? str){
+    str ??= "SHA1";
+
+    str =  str.toUpperCase();
+    if(str == "SHA1"){
+      return Algorithm.SHA1;
+    }else if (str == "SHA256"){
+      return Algorithm.SHA256;
+    }else{
+      return Algorithm.SHA512;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -27,12 +41,16 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
     if (widget.password['password'].startsWith('otpauth://totp/')) {
       _isTotp = true;
       // 从 password 字段中提取 TOTP 密钥
+      // otpauth://totp/ut:vearne?algorithm=SHA1&digits=6&issuer=ut&period=30&secret=TSGDMWE5TRZP4Q77LFVRGRBOAYSJ4XBD
       final uri = Uri.parse(widget.password['password']);
       final secret = uri.queryParameters['secret'];
+      final alg = getAlgorithm(uri.queryParameters["algorithm"]);
+
       if (secret != null) {
         _totpCode = OTP.generateTOTPCodeString(
           secret,
           DateTime.now().millisecondsSinceEpoch,
+          algorithm: alg,
           interval: 30,
         );
          _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
@@ -50,11 +68,14 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
           } else {
             setState(() {
               _timeRemaining = 30;
-              final secret = Uri.parse(widget.password['password']).queryParameters['secret'];
+              final uri = Uri.parse(widget.password['password']);
+              final secret = uri.queryParameters['secret'];
+              final alg = getAlgorithm(uri.queryParameters["algorithm"]);
               if (secret != null) {
                 _totpCode = OTP.generateTOTPCodeString(
                   secret,
                   DateTime.now().millisecondsSinceEpoch,
+                  algorithm: alg,
                   interval: 30,
                 );
               }
