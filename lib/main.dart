@@ -5,10 +5,24 @@ import 'package:path_provider/path_provider.dart';
 import 'login_screen.dart';
 import 's3_config_screen.dart';
 import 'dart:io';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
   // 确保 Flutter 框架初始化完成
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+
+  // 配置窗口选项
+  WindowOptions windowOptions = const WindowOptions(
+    title: 'mypwbox',
+    // size: Size(800, 600),
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  windowManager.setPreventClose(true); // 阻止窗口直接关闭
 
   // 读取本地配置
   final prefs = await SharedPreferences.getInstance();
@@ -22,37 +36,43 @@ void main() async {
     final bucketName = prefs.getString('bucketName') ?? '';
     final dirpath = prefs.getString('dirpath') ?? '';
 
-    // 初始化 Minio 客户端
     final minio = Minio(
       endPoint: endpoint,
       accessKey: accessKeyID,
       secretKey: secretAccessKey,
       useSSL: true,
-      // enableTrace: true,
     );
 
     try {
-      // 列出指定路径下的所有文件
-      await for (var result in minio.listObjects(bucketName,
-          prefix: dirpath, recursive: true)) {
+      await for (var result in minio.listObjects(bucketName, prefix: dirpath, recursive: true)) {
         for (var object in result.objects) {
-          // 下载文件到本地
-          if (object.key != null) { // 检查 object.key 是否为空
-            final localPath = await _getLocalFilePath(object.key!); // 使用空断言操作符
-            await minio.getObject(bucketName, object.key!).then((
-                byteStream) async {
-              final file = File(localPath); // 创建本地文件
-              await file.create(recursive: true); // 递归创建目录
-              await byteStream.pipe(file.openWrite()); // 将文件内容写入本地文件
-            });
-            debugPrint('Downloaded: ${object.key} to $localPath');
+          if (object.key != null) {
+            final localPath = await _getLocalFilePath(object.key!);
+            final localModificationTime = await _getLocalFileModificationTime(localPath);
+            final s3ModificationTime = object.lastModified; // Assume this is available
+
+            // Debugging output
+            debugPrint('Local Modification Time: $localModificationTime');
+            debugPrint('S3 Modification Time: $s3ModificationTime');
+
+            if (localModificationTime == null ||
+                (s3ModificationTime != null && s3ModificationTime.isAfter(localModificationTime))) {
+              await minio.getObject(bucketName, object.key!).then((byteStream) async {
+                final file = File(localPath);
+                await file.create(recursive: true);
+                await byteStream.pipe(file.openWrite());
+              });
+              debugPrint('Downloaded: ${object.key} to $localPath');
+            } else {
+              debugPrint('Skipped: ${object.key} (local file is up to date)');
+            }
           } else {
-            debugPrint('Skipping file with null key'); // 如果 object.key 为空，跳过该文件
+            debugPrint('Skipping file with null key');
           }
         }
       }
     } catch (e) {
-      debugPrint('Failed to download files from S3: $e'); // 捕获并打印错误
+      debugPrint('Failed to download files from S3: $e');
     }
   }
 
@@ -84,4 +104,12 @@ Future<String> _getLocalFilePath(String key) async {
   return '${directory.path}/${key
       .split('/')
       .last}'; // 返回本地文件路径
+}
+
+Future<DateTime?> _getLocalFileModificationTime(String filePath) async {
+  final file = File(filePath);
+  if (await file.exists()) {
+    return await file.lastModified();
+  }
+  return null;
 }

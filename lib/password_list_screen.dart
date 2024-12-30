@@ -9,6 +9,7 @@ import 'package:minio/minio.dart';
 import 'password_detail_dialog.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:window_manager/window_manager.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -20,8 +21,7 @@ class PasswordListScreen extends StatefulWidget {
   _PasswordListScreenState createState() => _PasswordListScreenState();
 }
 
-class _PasswordListScreenState extends State<PasswordListScreen> {
-  Timer? _timer; // 定义一个 Timer 变量
+class _PasswordListScreenState extends State<PasswordListScreen>  with WindowListener {
   late Database _database;
   List<Map<String, dynamic>> _filteredPasswords = [];
   final TextEditingController _searchController = TextEditingController();
@@ -30,10 +30,15 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
   static const int _pageSize = 5;
   bool _hasNextPage = false;
   bool _isStale = false;
+  String dbName = "";
+  String dbPath = "";
 
   @override
   void initState() {
     super.initState();
+    // 在窗口管理器上增加额外的监听逻辑
+    windowManager.addListener(this);
+
     _searchController.addListener(_filterPasswords);
     _initializeDatabase();
   }
@@ -47,9 +52,9 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   Future<void> _initializeDatabase() async {
     final directory = await getApplicationDocumentsDirectory();
-    String dbName = "__mypwbox__" + widget.username;
+    dbName = "__mypwbox__" + widget.username;
     dbName = hashN(dbName, 100);
-    final dbPath = path.join(directory.path, dbName);
+    dbPath = path.join(directory.path, dbName);
 
     try {
       _database = await openDatabase(dbPath,
@@ -356,13 +361,44 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   @override
   void dispose() {
-    // debugPrint("_isStale: $_isStale");
-    // if (_isStale) {
-    //   debugPrint("Uploading database to S3...");
-    //   _uploadDatabase();
-    // }
+    windowManager.removeListener(this);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    // 在关闭窗口时执行额外操作
+    bool shouldClose = await _showExitConfirmationDialog();
+    if (shouldClose) {
+      debugPrint("_isStale: $_isStale");
+      if (_isStale) {
+        debugPrint("Uploading database to S3...");
+        await _uploadDatabase();
+      }
+      await windowManager.destroy(); // 允许窗口关闭
+    }
+  }
+
+  Future<bool> _showExitConfirmationDialog() async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('退出确认'),
+        content: Text('确定要退出应用吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('确定'),
+          ),
+        ],
+      ),
+    ) ??
+        false;
   }
 
   Future<void> _uploadDatabase() async {
@@ -381,17 +417,15 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
         accessKey: accessKeyID,
         secretKey: secretAccessKey,
         useSSL: true, // 如果使用 HTTPS，设置为 true
+        // enableTrace: true,
       );
 
-      final directory = await getApplicationDocumentsDirectory();
-      final key = '$dirpath/${widget.username}_encrypted_password_manager.db';
-      final dbPath = path.join(
-          directory.path, '${widget.username}_encrypted_password_manager.db');
+      final key = '$dirpath/$dbName';
+      debugPrint("upload file [$dbPath] to: [$key]");
 
-      debugPrint("key: $key");
-      debugPrint("filePath: $dbPath");
       try {
-        await minio.fPutObject(bucketName, key, dbPath);
+        final eTag = await minio.fPutObject(bucketName, key, dbPath);
+        debugPrint("upload file [$dbPath] to: [$key], eTag: $eTag");
       } catch (e) {
         debugPrint('Failed to upload database to S3: $e');
       }
