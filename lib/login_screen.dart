@@ -49,9 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _createDatabase() async {
-    if (_usernameController.text.isEmpty) {
+    if (_usernameController.text.isEmpty||_usernameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('请输入用户名')));
+          SnackBar(content: Text('请输入用户名和密码')));
       return;
     }
 
@@ -67,12 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    String secureHash = _passwordController.text + "__mypwbox__" + _usernameController.text;
+    secureHash = hashN(secureHash, 100);
+
     try {
       await openDatabase(
         dbPath,
-        password: _passwordController.text.isNotEmpty
-            ? _passwordController.text
-            : null,
+        password: secureHash,
         version: 1,
         onCreate: (db, version) async {
           await db.execute('''
