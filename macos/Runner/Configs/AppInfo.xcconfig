@@ -8,7 +8,7 @@
 PRODUCT_NAME = mypwbox
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.mypwbox
+PRODUCT_BUNDLE_IDENTIFIER = cn.vearne.mypwbox
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2024 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2024 cn.vearne. All rights reserved.

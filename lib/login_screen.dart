@@ -17,12 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _onLogin() {
+  void _onLogin() async{
     if (_usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       String secureHash = _passwordController.text + "__mypwbox__" + _usernameController.text;
-      for(int i=0;i< 100;i++){
-        secureHash = sha1.convert(utf8.encode(secureHash)).toString();
+      secureHash = hashN(secureHash, 100);
+
+      final directory = await getApplicationDocumentsDirectory();
+      String dbName = "__mypwbox__" + _usernameController.text;
+      dbName = hashN(dbName, 100);
+      final dbPath = path.join(directory.path, dbName);
+      bool databaseExists = await databaseFactory.databaseExists(dbPath);
+      if (!databaseExists) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('数据库不存在')));
+        return;
       }
+
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PasswordListScreen(username: _usernameController.text, secureHash: secureHash))
@@ -30,6 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
     }
+  }
+
+  String hashN(String str, int n){
+    for(int i=0;i< n;i++){
+      str = sha1.convert(utf8.encode(str)).toString();
+    }
+    return str;
   }
 
   Future<void> _createDatabase() async {
@@ -40,11 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final directory = await getApplicationDocumentsDirectory();
-    final dbPath = path.join(directory.path,
-        '${_usernameController.text}_encrypted_password_manager.db');
+    String dbName = "__mypwbox__" + _usernameController.text;
+    dbName = hashN(dbName, 100);
+    final dbPath = path.join(directory.path, dbName);
 
     bool databaseExists = await databaseFactory.databaseExists(dbPath);
-
     if (databaseExists) {
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('数据库已存在')));
