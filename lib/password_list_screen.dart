@@ -1,8 +1,15 @@
-import 'package:otp/otp.dart';
+import 'dart:async';
+import 'package:minio/io.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path; // Rename the import to avoid conflict
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:minio/minio.dart';
+import 'password_detail_dialog.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'package:window_manager/window_manager.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -14,7 +21,7 @@ class PasswordListScreen extends StatefulWidget {
   _PasswordListScreenState createState() => _PasswordListScreenState();
 }
 
-class _PasswordListScreenState extends State<PasswordListScreen> {
+class _PasswordListScreenState extends State<PasswordListScreen>  with WindowListener {
   late Database _database;
   List<Map<String, dynamic>> _filteredPasswords = [];
   final TextEditingController _searchController = TextEditingController();
@@ -22,70 +29,39 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
   int _currentPage = 0;
   static const int _pageSize = 5;
   bool _hasNextPage = false;
+  bool _isStale = false;
+  String dbName = "";
+  String dbPath = "";
 
   @override
   void initState() {
     super.initState();
+    // 在窗口管理器上增加额外的监听逻辑
+    windowManager.addListener(this);
+
     _searchController.addListener(_filterPasswords);
     _initializeDatabase();
   }
 
+  String hashN(String str, int n) {
+    for (int i = 0; i < n; i++) {
+      str = sha1.convert(utf8.encode(str)).toString();
+    }
+    return str;
+  }
+
   Future<void> _initializeDatabase() async {
     final directory = await getApplicationDocumentsDirectory();
-    final dbPath = path.join(directory.path,
-        '${widget.username}_encrypted_password_manager.db'); // Use path.join
-
-    bool databaseExists = await databaseFactory.databaseExists(dbPath);
-
-    if (!databaseExists) {
-      bool shouldCreate = await showDialog(
-        context: context, // Use BuildContext here
-        builder: (context) {
-          return AlertDialog(
-            title: Text('数据库不存在'),
-            content: Text('是否创建新的数据库？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text('取消'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text('创建'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (!shouldCreate) {
-        Navigator.pop(context); // Use BuildContext here
-        return;
-      }
-    }
+    dbName = "__mypwbox__" + widget.username;
+    dbName = hashN(dbName, 100);
+    dbPath = path.join(directory.path, dbName);
 
     try {
-      _database = await openDatabase(
-        dbPath,
-        password: "${widget.secureHash}",
-        version: 1,
-        onCreate: (db, version) async {
-          await db.execute('''
-            CREATE TABLE passwords (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              title TEXT NOT NULL,
-              account TEXT NOT NULL,
-              password TEXT NOT NULL,
-              comment TEXT,
-              created_at TEXT NOT NULL,
-              updated_at TEXT NOT NULL
-            )
-          ''');
-        },
-      );
+      _database = await openDatabase(dbPath,
+          password: "${widget.secureHash}", version: 1);
       _loadPasswords();
     } catch (e) {
-      print('Database open failed, Incorrect username or password: $e');
+      debugPrint('Database open failed, Incorrect username or password: $e');
       // 密码错误，显示弹窗提示用户
       showDialog(
         context: context,
@@ -121,7 +97,9 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
         limit: _pageSize,
         offset: offset,
       );
-      totalCount = Sqflite.firstIntValue(await _database.rawQuery('SELECT COUNT(*) FROM passwords')) ?? 0;
+      totalCount = Sqflite.firstIntValue(
+              await _database.rawQuery('SELECT COUNT(*) FROM passwords')) ??
+          0;
     } else {
       passwords = await _database.query(
         'passwords',
@@ -132,9 +110,10 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
         offset: offset,
       );
       totalCount = Sqflite.firstIntValue(await _database.rawQuery(
-        'SELECT COUNT(*) FROM passwords WHERE LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
-        ['%$query%', '%$query%'],
-      )) ?? 0;
+            'SELECT COUNT(*) FROM passwords WHERE LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
+            ['%$query%', '%$query%'],
+          )) ??
+          0;
     }
 
     setState(() {
@@ -152,30 +131,47 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   Future<void> _addPassword(Map<String, dynamic> newPassword) async {
     await _database.insert('passwords', newPassword);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
-  Future<void> _updatePassword(int id, Map<String, dynamic> updatedPassword) async {
-    await _database.update('passwords', updatedPassword, where: 'id = ?', whereArgs: [id]);
+  Future<void> _updatePassword(
+      int id, Map<String, dynamic> updatedPassword) async {
+    await _database
+        .update('passwords', updatedPassword, where: 'id = ?', whereArgs: [id]);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
   Future<void> _deletePassword(int id) async {
     await _database.delete('passwords', where: 'id = ?', whereArgs: [id]);
+    setState(() {
+      _isStale = true;
+    });
     _loadPasswords();
   }
 
   void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
-    final _titleController = TextEditingController(text: passwordToUpdate?['title']);
-    final _accountController = TextEditingController(text: passwordToUpdate?['account']);
-    final _passwordController = TextEditingController(text: passwordToUpdate?['password']);
-    final _commentController = TextEditingController(text: passwordToUpdate?['comment']);
+    final _titleController =
+        TextEditingController(text: passwordToUpdate?['title']);
+    final _accountController =
+        TextEditingController(text: passwordToUpdate?['account']);
+    final _passwordController =
+        TextEditingController(text: passwordToUpdate?['password']);
+    final _commentController =
+        TextEditingController(text: passwordToUpdate?['comment']);
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(passwordToUpdate == null ? 'Add New Password' : 'Update Password'),
+          title: Text(passwordToUpdate == null
+              ? 'Add New Password'
+              : 'Update Password'),
           content: SingleChildScrollView(
             child: Column(
               children: [
@@ -263,126 +259,12 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
     }
   }
 
-  String _formatDate(String dateString) {
-    return dateString.substring(0, 19).replaceAll("T", " ");
-  }
-
   void _showPasswordDetails(Map<String, dynamic> password) {
-    bool _isPasswordVisible = false;
-    bool _isTotp = false;
-    String _totpCode = '';
-    int _timeRemaining = 30;
-
-    // 判断是否是TOTP密钥
-    if (password['password'].startsWith('otpauth://totp/')) {
-      _isTotp = true;
-      // 从 password 字段中提取 TOTP 密钥
-      final uri = Uri.parse(password['password']);
-      final secret = uri.queryParameters['secret'];
-      if (secret != null) {
-        _totpCode = OTP.generateTOTPCodeString(
-          secret,
-          DateTime.now().millisecondsSinceEpoch,
-          interval: 30,
-        );
-        _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
-      }
-    }
-
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            if (_isTotp) {
-              // 启动倒计时
-              Future.delayed(Duration(seconds: 1), () {
-                if (_timeRemaining > 0) {
-                  setState(() {
-                    _timeRemaining--;
-                  });
-                } else {
-                  setState(() {
-                    _timeRemaining = 30;
-                    final secret = Uri.parse(password['password']).queryParameters['secret'];
-                    if (secret != null) {
-                      _totpCode = OTP.generateTOTPCodeString(
-                        secret,
-                        DateTime.now().millisecondsSinceEpoch,
-                        interval: 30,
-                      );
-                    }
-                  });
-                }
-              });
-            }
-
-            return AlertDialog(
-              title: Text('Password Details'),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Title: ${password['title']}'),
-                    SizedBox(height: 10),
-                    Text('Account: ${password['account']}'),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text('Password: ${_isPasswordVisible
-                            ? password['password']
-                            : '********'}'),
-                        IconButton(
-                          icon: Icon(
-                              _isPasswordVisible ? Icons.visibility_off : Icons
-                                  .visibility),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Text('Comment: ${password['comment']}'),
-                    SizedBox(height: 10),
-                    Text('Created At: ${_formatDate(password['created_at'])}'),
-                    SizedBox(height: 10),
-                    Text('Updated At: ${_formatDate(password['updated_at'])}'),
-                    if (_isTotp) ...[
-                      SizedBox(height: 20),
-                      Text('TOTP Code: $_totpCode'),
-                      SizedBox(height: 10),
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: _timeRemaining / 30,
-                              strokeWidth: 4,
-                            ),
-                            Text(
-                              '$_timeRemaining',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Close'),
-                ),
-              ],
-            );
-          },
+        return PasswordDetailsDialog(
+          password: password,
         );
       },
     );
@@ -392,7 +274,16 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Password Manager'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Password Manager'),
+            Text(
+              'Database: ${widget.username}',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -411,46 +302,51 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
             child: _filteredPasswords.isEmpty
                 ? Center(child: Text('No passwords found.'))
                 : ListView.builder(
-              itemCount: _filteredPasswords.length,
-              itemBuilder: (context, index) {
-                final password = _filteredPasswords[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(password['title']),
-                    subtitle: Text(password['account']),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.visibility),
-                          onPressed: () => _showPasswordDetails(password),
+                    itemCount: _filteredPasswords.length,
+                    itemBuilder: (context, index) {
+                      final password = _filteredPasswords[index];
+                      return Card(
+                        child: ListTile(
+                          title: Text(password['title']),
+                          subtitle: Text(password['account']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.visibility),
+                                onPressed: () => _showPasswordDetails(password),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () => _showAddPasswordDialog(
+                                    passwordToUpdate: password),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () =>
+                                    _confirmDeletePassword(password['id']),
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          onPressed: () => _showAddPasswordDialog(passwordToUpdate: password),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () => _confirmDeletePassword(password['id']),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 icon: Icon(Icons.chevron_left),
-                onPressed: _currentPage > 0 ? () => _changePage(_currentPage - 1) : null,
+                onPressed: _currentPage > 0
+                    ? () => _changePage(_currentPage - 1)
+                    : null,
               ),
               Text('Page ${_currentPage + 1}'),
               IconButton(
                 icon: Icon(Icons.chevron_right),
-                onPressed: _hasNextPage ? () => _changePage(_currentPage + 1) : null,
+                onPressed:
+                    _hasNextPage ? () => _changePage(_currentPage + 1) : null,
               ),
             ],
           ),
@@ -465,7 +361,74 @@ class _PasswordListScreenState extends State<PasswordListScreen> {
 
   @override
   void dispose() {
+    windowManager.removeListener(this);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    // 在关闭窗口时执行额外操作
+    bool shouldClose = await _showExitConfirmationDialog();
+    if (shouldClose) {
+      debugPrint("_isStale: $_isStale");
+      if (_isStale) {
+        debugPrint("Uploading database to S3...");
+        await _uploadDatabase();
+      }
+      await windowManager.destroy(); // 允许窗口关闭
+    }
+  }
+
+  Future<bool> _showExitConfirmationDialog() async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('退出确认'),
+        content: Text('确定要退出应用吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('确定'),
+          ),
+        ],
+      ),
+    ) ??
+        false;
+  }
+
+  Future<void> _uploadDatabase() async {
+    final prefs = await SharedPreferences.getInstance();
+    final offline = prefs.getBool('offline') ?? false;
+
+    if (!offline) {
+      final endpoint = prefs.getString('endpoint') ?? '';
+      final accessKeyID = prefs.getString('accessKeyID') ?? '';
+      final secretAccessKey = prefs.getString('secretAccessKey') ?? '';
+      final bucketName = prefs.getString('bucketName') ?? '';
+      final dirpath = prefs.getString('dirpath') ?? '';
+
+      final minio = Minio(
+        endPoint: endpoint,
+        accessKey: accessKeyID,
+        secretKey: secretAccessKey,
+        useSSL: true, // 如果使用 HTTPS，设置为 true
+        // enableTrace: true,
+      );
+
+      final key = '$dirpath/$dbName';
+      debugPrint("upload file [$dbPath] to: [$key]");
+
+      try {
+        final eTag = await minio.fPutObject(bucketName, key, dbPath);
+        debugPrint("upload file [$dbPath] to: [$key], eTag: $eTag");
+      } catch (e) {
+        debugPrint('Failed to upload database to S3: $e');
+      }
+    }
   }
 }
