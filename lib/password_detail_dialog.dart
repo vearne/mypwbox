@@ -20,16 +20,15 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
   int _timeRemaining = 30;
   String _totpCode = "";
 
-
-  Algorithm getAlgorithm(String? str){
+  Algorithm getAlgorithm(String? str) {
     str ??= "SHA1";
 
-    str =  str.toUpperCase();
-    if(str == "SHA1"){
+    str = str.toUpperCase();
+    if (str == "SHA1") {
       return Algorithm.SHA1;
-    }else if (str == "SHA256"){
+    } else if (str == "SHA256") {
       return Algorithm.SHA256;
-    }else{
+    } else {
       return Algorithm.SHA512;
     }
   }
@@ -52,15 +51,17 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
           DateTime.now().millisecondsSinceEpoch,
           algorithm: alg,
           interval: 30,
+          isGoogle: true,
         );
-         _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
+        _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
       }
     }
 
     if (_isTotp && _timer == null) {
       // 启动倒计时
       _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-        if (mounted) { // 检查 mounted 属性
+        if (mounted) {
+          // 检查 mounted 属性
           if (_timeRemaining > 0) {
             setState(() {
               _timeRemaining--;
@@ -77,6 +78,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                   DateTime.now().millisecondsSinceEpoch,
                   algorithm: alg,
                   interval: 30,
+                  isGoogle: true,
                 );
               }
             });
@@ -110,10 +112,13 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text('Password: ${_isPasswordVisible ? widget.password['password'] : '********'}'),
+                  child: Text(
+                      'Password: ${_isPasswordVisible ? widget.password['password'] : '********'}'),
                 ),
                 IconButton(
-                  icon: Icon(_isPasswordVisible ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(_isPasswordVisible
+                      ? Icons.visibility_off
+                      : Icons.visibility),
                   onPressed: () {
                     setState(() {
                       _isPasswordVisible = !_isPasswordVisible;
