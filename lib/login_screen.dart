@@ -1,8 +1,7 @@
 // lib/login_screen.dart
 import 'package:flutter/material.dart';
 import 'password_list_screen.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'helpers.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -15,6 +14,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with WindowListener {
+  bool _obscureText = true; // 控制是否显示明文
+
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -88,13 +89,6 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
     }
-  }
-
-  String hashN(String str, int n) {
-    for (int i = 0; i < n; i++) {
-      str = sha1.convert(utf8.encode(str)).toString();
-    }
-    return str;
   }
 
   Future<void> _createDatabase() async {
@@ -174,10 +168,24 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
             ),
             TextField(
               controller: _passwordController,
-              obscureText: true,
+              obscureText: _obscureText,
               enableSuggestions: false,
               autocorrect: false,
-              decoration: InputDecoration(labelText: '密码'),
+              decoration: InputDecoration(
+                labelText: '密码',
+                // border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureText = !_obscureText; // 切换显示/隐藏
+                    });
+                  },
+                ),
+              ),
+
             ),
             SizedBox(height: 20),
             ElevatedButton(

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:mypwbox/helpers.dart';
 import 'dart:async';
 import 'package:otp/otp.dart';
 
 class PasswordDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> password;
+  final String secureHash;
 
   PasswordDetailsDialog({
     required this.password,
+    required this.secureHash,
   });
 
   @override
@@ -33,28 +36,37 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
     }
   }
 
+  void calcTOTP(String str) {
+    // 从 password 字段中提取 TOTP 密钥
+    // otpauth://totp/ut:vearne?algorithm=SHA1&digits=6&issuer=ut&period=30&secret=TSGDMWE5TRZP4Q77LFVRGRBOAYSJ4XBD
+    final uri = Uri.parse(str);
+    final secret = uri.queryParameters['secret'];
+    final alg = getAlgorithm(uri.queryParameters["algorithm"]);
+
+    if (secret != null) {
+      _totpCode = OTP.generateTOTPCodeString(
+        secret,
+        DateTime.now().millisecondsSinceEpoch,
+        algorithm: alg,
+        interval: 30,
+        isGoogle: true,
+      );
+      _timeRemaining =
+          30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    String password =
+        secureDecrypt(widget.password['password'], widget.secureHash);
     // 判断是否是TOTP密钥
-    if (widget.password['password'].startsWith('otpauth://totp/')) {
+    if (password.startsWith('otpauth://totp/')) {
       _isTotp = true;
       // 从 password 字段中提取 TOTP 密钥
       // otpauth://totp/ut:vearne?algorithm=SHA1&digits=6&issuer=ut&period=30&secret=TSGDMWE5TRZP4Q77LFVRGRBOAYSJ4XBD
-      final uri = Uri.parse(widget.password['password']);
-      final secret = uri.queryParameters['secret'];
-      final alg = getAlgorithm(uri.queryParameters["algorithm"]);
-
-      if (secret != null) {
-        _totpCode = OTP.generateTOTPCodeString(
-          secret,
-          DateTime.now().millisecondsSinceEpoch,
-          algorithm: alg,
-          interval: 30,
-          isGoogle: true,
-        );
-        _timeRemaining = 30 - (DateTime.now().millisecondsSinceEpoch ~/ 1000) % 30;
-      }
+      calcTOTP(password);
     }
 
     if (_isTotp && _timer == null) {
@@ -68,19 +80,8 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
             });
           } else {
             setState(() {
+              calcTOTP(password);
               _timeRemaining = 30;
-              final uri = Uri.parse(widget.password['password']);
-              final secret = uri.queryParameters['secret'];
-              final alg = getAlgorithm(uri.queryParameters["algorithm"]);
-              if (secret != null) {
-                _totpCode = OTP.generateTOTPCodeString(
-                  secret,
-                  DateTime.now().millisecondsSinceEpoch,
-                  algorithm: alg,
-                  interval: 30,
-                  isGoogle: true,
-                );
-              }
             });
           }
         } else {
