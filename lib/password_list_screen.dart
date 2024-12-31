@@ -7,9 +7,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:minio/minio.dart';
 import 'password_detail_dialog.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:window_manager/window_manager.dart';
+import 'helpers.dart';
+import 'password_dialog.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -21,7 +21,8 @@ class PasswordListScreen extends StatefulWidget {
   _PasswordListScreenState createState() => _PasswordListScreenState();
 }
 
-class _PasswordListScreenState extends State<PasswordListScreen>  with WindowListener {
+class _PasswordListScreenState extends State<PasswordListScreen>
+    with WindowListener {
   late Database _database;
   List<Map<String, dynamic>> _filteredPasswords = [];
   final TextEditingController _searchController = TextEditingController();
@@ -41,13 +42,6 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
 
     _searchController.addListener(_filterPasswords);
     _initializeDatabase();
-  }
-
-  String hashN(String str, int n) {
-    for (int i = 0; i < n; i++) {
-      str = sha1.convert(utf8.encode(str)).toString();
-    }
-    return str;
   }
 
   Future<void> _initializeDatabase() async {
@@ -130,6 +124,9 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
   }
 
   Future<void> _addPassword(Map<String, dynamic> newPassword) async {
+    // 密码存储前进行加密
+    newPassword["password"] =
+        secureEncrypt(newPassword["password"], widget.secureHash);
     await _database.insert('passwords', newPassword);
     setState(() {
       _isStale = true;
@@ -139,6 +136,9 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
 
   Future<void> _updatePassword(
       int id, Map<String, dynamic> updatedPassword) async {
+    // 密码存储前进行加密
+    updatedPassword["password"] =
+        secureEncrypt(updatedPassword["password"], widget.secureHash);
     await _database
         .update('passwords', updatedPassword, where: 'id = ?', whereArgs: [id]);
     setState(() {
@@ -155,71 +155,29 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
     _loadPasswords();
   }
 
+
   void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
-    final _titleController =
-        TextEditingController(text: passwordToUpdate?['title']);
-    final _accountController =
-        TextEditingController(text: passwordToUpdate?['account']);
-    final _passwordController =
-        TextEditingController(text: passwordToUpdate?['password']);
-    final _commentController =
-        TextEditingController(text: passwordToUpdate?['comment']);
+    Map<String, dynamic>? mutablePasswordToUpdate;
+
+    if (passwordToUpdate != null) {
+      // Create a mutable copy of the passwordToUpdate map
+      mutablePasswordToUpdate = Map<String, dynamic>.from(passwordToUpdate);
+      mutablePasswordToUpdate["password"] = secureDecrypt(mutablePasswordToUpdate["password"], widget.secureHash);
+    }
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(passwordToUpdate == null
-              ? 'Add New Password'
-              : 'Update Password'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: _titleController,
-                  decoration: InputDecoration(labelText: 'Title'),
-                ),
-                TextField(
-                  controller: _accountController,
-                  decoration: InputDecoration(labelText: 'Account'),
-                ),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(labelText: 'Password'),
-                ),
-                TextField(
-                  controller: _commentController,
-                  decoration: InputDecoration(labelText: 'Comment'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newPassword = {
-                  'title': _titleController.text,
-                  'account': _accountController.text,
-                  'password': _passwordController.text,
-                  'comment': _commentController.text,
-                  'created_at': DateTime.now().toIso8601String(),
-                  'updated_at': DateTime.now().toIso8601String(),
-                };
-
-                if (passwordToUpdate == null) {
-                  _addPassword(newPassword);
-                } else {
-                  _updatePassword(passwordToUpdate['id'], newPassword);
-                }
-                Navigator.pop(context);
-              },
-              child: Text(passwordToUpdate == null ? 'Add' : 'Update'),
-            ),
-          ],
+        return PasswordDialog(
+          context: context,
+          passwordToUpdate: mutablePasswordToUpdate,
+          onSave: (newPassword) {
+            if (passwordToUpdate == null) {
+              _addPassword(newPassword);
+            } else {
+              _updatePassword(mutablePasswordToUpdate!['id'], newPassword);
+            }
+          },
         );
       },
     );
@@ -265,6 +223,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
       builder: (context) {
         return PasswordDetailsDialog(
           password: password,
+          secureHash: widget.secureHash,
         );
       },
     );
@@ -382,22 +341,22 @@ class _PasswordListScreenState extends State<PasswordListScreen>  with WindowLis
 
   Future<bool> _showExitConfirmationDialog() async {
     return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('退出确认'),
-        content: Text('确定要退出应用吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('取消'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('退出确认'),
+            content: Text('确定要退出应用吗？'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('确定'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('确定'),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
   }
 

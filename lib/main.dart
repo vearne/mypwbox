@@ -44,20 +44,26 @@ void main() async {
     );
 
     try {
-      await for (var result in minio.listObjects(bucketName, prefix: dirpath, recursive: true)) {
+      await for (var result
+          in minio.listObjects(bucketName, prefix: dirpath, recursive: true)) {
         for (var object in result.objects) {
           if (object.key != null) {
             final localPath = await _getLocalFilePath(object.key!);
-            final localModificationTime = await _getLocalFileModificationTime(localPath);
-            final s3ModificationTime = object.lastModified; // Assume this is available
+            final localModificationTime =
+                await _getLocalFileModificationTime(localPath);
+            final s3ModificationTime =
+                object.lastModified; // Assume this is available
 
             // Debugging output
             debugPrint('Local Modification Time: $localModificationTime');
             debugPrint('S3 Modification Time: $s3ModificationTime');
 
             if (localModificationTime == null ||
-                (s3ModificationTime != null && s3ModificationTime.isAfter(localModificationTime))) {
-              await minio.getObject(bucketName, object.key!).then((byteStream) async {
+                (s3ModificationTime != null &&
+                    s3ModificationTime.isAfter(localModificationTime))) {
+              await minio
+                  .getObject(bucketName, object.key!)
+                  .then((byteStream) async {
                 final file = File(localPath);
                 await file.create(recursive: true);
                 await byteStream.pipe(file.openWrite());
@@ -101,9 +107,7 @@ class MyApp extends StatelessWidget {
 // 获取本地文件路径
 Future<String> _getLocalFilePath(String key) async {
   final directory = await getApplicationDocumentsDirectory(); // 获取应用文档目录
-  return '${directory.path}/${key
-      .split('/')
-      .last}'; // 返回本地文件路径
+  return '${directory.path}/${key.split('/').last}'; // 返回本地文件路径
 }
 
 Future<DateTime?> _getLocalFileModificationTime(String filePath) async {
