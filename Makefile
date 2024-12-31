@@ -1,4 +1,4 @@
-VERSION := v0.0.2
+VERSION := v0.0.3
 
 RELEASE_DIR = dist
 DMG_NAME = mypwbox_$(VERSION).dmg

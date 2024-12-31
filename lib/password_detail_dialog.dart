@@ -114,7 +114,8 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
               children: [
                 Expanded(
                   child: Text(
-                      'Password: ${_isPasswordVisible ? widget.password['password'] : '********'}'),
+                      'Password: ${_isPasswordVisible ?
+                      secureDecrypt(widget.password['password'], widget.secureHash) : '********'}'),
                 ),
                 IconButton(
                   icon: Icon(_isPasswordVisible

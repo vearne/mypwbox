@@ -9,6 +9,7 @@ import 'package:minio/minio.dart';
 import 'password_detail_dialog.dart';
 import 'package:window_manager/window_manager.dart';
 import 'helpers.dart';
+import 'password_dialog.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -32,7 +33,6 @@ class _PasswordListScreenState extends State<PasswordListScreen>
   bool _isStale = false;
   String dbName = "";
   String dbPath = "";
-  bool _obscureText = false;
 
   @override
   void initState() {
@@ -155,88 +155,29 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     _loadPasswords();
   }
 
-  void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
-    final _titleController =
-        TextEditingController(text: passwordToUpdate?['title']);
-    final _accountController =
-        TextEditingController(text: passwordToUpdate?['account']);
 
-    bool _passwordToUpdate = passwordToUpdate != null;
-    String realPwd = "";
-    if (_passwordToUpdate) {
-      realPwd = secureDecrypt(passwordToUpdate["password"], widget.secureHash);
+  void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
+    Map<String, dynamic>? mutablePasswordToUpdate;
+
+    if (passwordToUpdate != null) {
+      // Create a mutable copy of the passwordToUpdate map
+      mutablePasswordToUpdate = Map<String, dynamic>.from(passwordToUpdate);
+      mutablePasswordToUpdate["password"] = secureDecrypt(mutablePasswordToUpdate["password"], widget.secureHash);
     }
-    final _passwordController = TextEditingController(text: realPwd);
-    final _commentController =
-        TextEditingController(text: passwordToUpdate?['comment']);
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(passwordToUpdate == null
-              ? 'Add New Password'
-              : 'Update Password'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: _titleController,
-                  decoration: InputDecoration(labelText: 'Title'),
-                ),
-                TextField(
-                  controller: _accountController,
-                  decoration: InputDecoration(labelText: 'Account'),
-                ),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureText ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText; // 切换显示/隐藏
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                TextField(
-                  controller: _commentController,
-                  decoration: InputDecoration(labelText: 'Comment'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newPassword = {
-                  'title': _titleController.text,
-                  'account': _accountController.text,
-                  'password': _passwordController.text,
-                  'comment': _commentController.text,
-                  'created_at': DateTime.now().toIso8601String(),
-                  'updated_at': DateTime.now().toIso8601String(),
-                };
-
-                if (passwordToUpdate == null) {
-                  _addPassword(newPassword);
-                } else {
-                  _updatePassword(passwordToUpdate['id'], newPassword);
-                }
-                Navigator.pop(context);
-              },
-              child: Text(passwordToUpdate == null ? 'Add' : 'Update'),
-            ),
-          ],
+        return PasswordDialog(
+          context: context,
+          passwordToUpdate: mutablePasswordToUpdate,
+          onSave: (newPassword) {
+            if (passwordToUpdate == null) {
+              _addPassword(newPassword);
+            } else {
+              _updatePassword(mutablePasswordToUpdate!['id'], newPassword);
+            }
+          },
         );
       },
     );
