@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 String secureEncrypt(String plainText, String key) {
   int padLength = hashStringToUint64(key) % 30 + 60;
@@ -71,4 +72,25 @@ String generateRandomString(int length) {
 
   return List.generate(length, (index) => chars[random.nextInt(chars.length)])
       .join();
+}
+
+Future<Database> createDatabase(String dbPath, String secureHash) async {
+  return openDatabase(
+    dbPath,
+    password: secureHash,
+    version: 1,
+    onCreate: (db, version) async {
+      await db.execute('''
+                      CREATE TABLE passwords (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        title TEXT NOT NULL,
+                        account TEXT NOT NULL,
+                        password TEXT NOT NULL,
+                        comment TEXT,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                      )
+                  ''');
+    },
+  );
 }
