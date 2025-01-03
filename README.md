@@ -1,16 +1,30 @@
 # mypwbox
 
-pw box
+mypwbox is a password management tool that supports backing up the database to object storage.
 
-## Getting Started
+* [中文 README](https://github.com/vearne/mypwbox/blob/master/README_zh.md)
 
-This project is a starting point for a Flutter application.
+**Notice**: Critical passwords should not be stored in electronic documents; the safest way is to commit them to memory.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Quickstart
+### Get App package.
+1) Direct download
+   [release](https://github.com/vearne/mypwbox/releases)
+2) build by yourself
+```
+make dmg
+```
+### Offline Mode
+Offline mode is default
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Online Mode
+Any object storage that supports the S3 protocol can be used
+* AWS S3
+* [Aliyun OSS](https://help.aliyun.com/zh/oss/user-guide/regions-and-endpoints)
+* [Tencent COS](https://cloud.tencent.com/document/product/436/6224)
+* MinIO
+
+![](./img/s3.jpg)
+![](./img/login.jpg)
+![](./img/list.jpg)
