@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 's3_config_screen.dart';
 import 'package:window_manager/window_manager.dart';
+import 'reset_database_dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -91,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     }
   }
 
-  Future<void> _createDatabase() async {
+  void _createDatabase() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
@@ -115,30 +116,22 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     secureHash = hashN(secureHash, 100);
 
     try {
-      await openDatabase(
-        dbPath,
-        password: secureHash,
-        version: 1,
-        onCreate: (db, version) async {
-          await db.execute('''
-            CREATE TABLE passwords (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              title TEXT NOT NULL,
-              account TEXT NOT NULL,
-              password TEXT NOT NULL,
-              comment TEXT,
-              created_at TEXT NOT NULL,
-              updated_at TEXT NOT NULL
-            )
-          ''');
-        },
-      );
+      await createDatabase(dbPath, secureHash);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('数据库创建成功')));
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('数据库创建失败: $e')));
     }
+  }
+
+  void _showResetPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return ResetDatabaseDialog();
+      },
+    );
   }
 
   @override
@@ -193,10 +186,20 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
               child: Text('登录'),
             ),
             SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _createDatabase,
-              child: Text('创建数据库'),
-            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+                children:[
+                  ElevatedButton(
+                    onPressed: _createDatabase,
+                    child: Text('创建数据库'),
+                  ),
+                  SizedBox(width: 10), // 添加间距
+                  ElevatedButton(
+                    onPressed: _showResetPasswordDialog,
+                    child: Text('重置数据库密码'),
+                  ),
+                ]
+            )
           ],
         ),
       ),
