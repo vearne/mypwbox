@@ -6,6 +6,8 @@ import 'login_screen.dart';
 import 's3_config_screen.dart';
 import 'dart:io';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:mypwbox/l10n/app_localizations.dart';
 
 void main() async {
   // 确保 Flutter 框架初始化完成
@@ -92,10 +94,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Password Manager',
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', ''),
+        const Locale('zh', ''),
+      ],
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginScreen(), // 默认显示登录界面
+      home: LoginScreen(),
+      // 默认显示登录界面
       routes: {
         '/login': (context) => LoginScreen(), // 登录界面
         '/s3config': (context) => S3ConfigScreen(), // S3 配置界面

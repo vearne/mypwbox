@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'l10n/app_localizations.dart'; // Import AppLocalizations
 
 class PasswordDialog extends StatefulWidget {
   final BuildContext context;
@@ -34,24 +35,26 @@ class _PasswordDialogState extends State<PasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context); // Get localized strings
+
     return AlertDialog(
-      title: Text(widget.passwordToUpdate == null ? 'Add New Password' : 'Update Password'),
+      title: Text(widget.passwordToUpdate == null ? localizations!.add! : localizations!.update!),
       content: SingleChildScrollView(
         child: Column(
           children: [
             TextField(
               controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(labelText: localizations!.title),
             ),
             TextField(
               controller: _accountController,
-              decoration: InputDecoration(labelText: 'Account'),
+              decoration: InputDecoration(labelText: localizations!.account),
             ),
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: localizations!.password,
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility : Icons.visibility_off,
@@ -66,7 +69,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
             ),
             TextField(
               controller: _commentController,
-              decoration: InputDecoration(labelText: 'Comment'),
+              decoration: InputDecoration(labelText: localizations!.comment),
             ),
           ],
         ),
@@ -74,7 +77,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
+          child: Text(localizations!.cancel!),
         ),
         ElevatedButton(
           onPressed: () {
@@ -90,7 +93,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
             widget.onSave(newPassword);
             Navigator.pop(context);
           },
-          child: Text(widget.passwordToUpdate == null ? 'Add' : 'Update'),
+          child: Text(widget.passwordToUpdate == null ? localizations!.add! : localizations!.update!),
         ),
       ],
     );

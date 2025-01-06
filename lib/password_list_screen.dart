@@ -10,6 +10,7 @@ import 'password_detail_dialog.dart';
 import 'package:window_manager/window_manager.dart';
 import 'helpers.dart';
 import 'password_dialog.dart';
+import 'l10n/app_localizations.dart'; // Import localization file
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -61,15 +62,16 @@ class _PasswordListScreenState extends State<PasswordListScreen>
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('错误'),
-            content: Text('输入的用户名或密码有误，请重试。'),
+            title: Text(AppLocalizations.of(context)!.error!),
+            content:
+                Text(AppLocalizations.of(context)!.incorrectUsernamePassword!),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(context); // 关闭弹窗
                   Navigator.pushReplacementNamed(context, '/login'); // 跳转回登录页面
                 },
-                child: Text('确定'),
+                child: Text(AppLocalizations.of(context)!.confirm!),
               ),
             ],
           );
@@ -155,14 +157,14 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     _loadPasswords();
   }
 
-
   void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
     Map<String, dynamic>? mutablePasswordToUpdate;
 
     if (passwordToUpdate != null) {
       // Create a mutable copy of the passwordToUpdate map
       mutablePasswordToUpdate = Map<String, dynamic>.from(passwordToUpdate);
-      mutablePasswordToUpdate["password"] = secureDecrypt(mutablePasswordToUpdate["password"], widget.secureHash);
+      mutablePasswordToUpdate["password"] =
+          secureDecrypt(mutablePasswordToUpdate["password"], widget.secureHash);
     }
 
     showDialog(
@@ -187,20 +189,22 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     showDialog(
       context: context,
       builder: (context) {
+        final localizations = AppLocalizations.of(context);
+
         return AlertDialog(
-          title: Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete this password?'),
+          title: Text(localizations?.confirmDelete ?? '确认删除'),
+          content: Text(localizations?.areYouSureDelete ?? '确定要删除此密码吗?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: Text(localizations?.cancel ?? '取消？'),
             ),
             ElevatedButton(
               onPressed: () {
                 _deletePassword(id);
                 Navigator.pop(context);
               },
-              child: Text('Delete'),
+              child: Text(localizations?.delete ?? '删除'),
             ),
           ],
         );
@@ -343,16 +347,16 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('退出确认'),
-            content: Text('确定要退出应用吗？'),
+            title: Text(AppLocalizations.of(context)!.exitConfirmation!),
+            content: Text(AppLocalizations.of(context)!.areYouSureExit!),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('取消'),
+                child: Text(AppLocalizations.of(context)!.cancel!),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('确定'),
+                child: Text(AppLocalizations.of(context)!.confirm!),
               ),
             ],
           ),
@@ -386,7 +390,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
         final eTag = await minio.fPutObject(bucketName, key, dbPath);
         debugPrint("upload file [$dbPath] to: [$key], eTag: $eTag");
       } catch (e) {
-        debugPrint('Failed to upload database to S3: $e');
+        debugPrint('${AppLocalizations.of(context)!.uploadFailed!} $e');
       }
     }
   }

@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 's3_config_screen.dart';
 import 'package:window_manager/window_manager.dart';
 import 'reset_database_dialog.dart';
+import 'l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -44,22 +45,22 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
 
   Future<bool> _showExitConfirmationDialog() async {
     return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('退出确认'),
-            content: Text('确定要退出应用吗？'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('取消'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('确定'),
-              ),
-            ],
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalizations.of(context)?.confirmExit ?? 'Exit Confirmation'),
+        content: Text(AppLocalizations.of(context)?.areYouSureExit ?? 'Are you sure you want to exit the application?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
           ),
-        ) ??
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(AppLocalizations.of(context)?.yes ?? 'Yes'),
+          ),
+        ],
+      ),
+    ) ??
         false;
   }
 
@@ -77,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
       bool databaseExists = await databaseFactory.databaseExists(dbPath);
       if (!databaseExists) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('数据库不存在')));
+            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseNotExist ?? 'Database does not exist')));
         return;
       }
 
@@ -88,14 +89,14 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
                   username: _usernameController.text, secureHash: secureHash)));
     } else {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.enterUsernamePassword ?? 'Please enter username and password')));
     }
   }
 
   void _createDatabase() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('请输入用户名和密码')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.enterUsernamePassword ?? 'Please enter username and password')));
       return;
     }
 
@@ -107,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     bool databaseExists = await databaseFactory.databaseExists(dbPath);
     if (databaseExists) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('数据库已存在')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseExists ?? 'Database already exists')));
       return;
     }
 
@@ -118,10 +119,10 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     try {
       await createDatabase(dbPath, secureHash);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('数据库创建成功')));
+          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseCreated ?? 'Database created successfully')));
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('数据库创建失败: $e')));
+          .showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)?.databaseCreationFailed ?? 'Database creation failed'}: $e')));
     }
   }
 
@@ -136,9 +137,11 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('登录'),
+        title: Text(localizations?.login ?? 'Login'),
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
@@ -157,7 +160,8 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(labelText: '用户名'),
+              decoration: InputDecoration(
+                  labelText: localizations?.username ?? 'Username'),
             ),
             TextField(
               controller: _passwordController,
@@ -165,8 +169,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
               enableSuggestions: false,
               autocorrect: false,
               decoration: InputDecoration(
-                labelText: '密码',
-                // border: OutlineInputBorder(),
+                labelText: localizations?.password ?? 'Password',
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility : Icons.visibility_off,
@@ -178,28 +181,24 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
                   },
                 ),
               ),
-
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _onLogin,
-              child: Text('登录'),
+              child: Text(localizations?.login ?? 'Login'),
             ),
             SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-                children:[
-                  ElevatedButton(
-                    onPressed: _createDatabase,
-                    child: Text('创建数据库'),
-                  ),
-                  SizedBox(width: 10), // 添加间距
-                  ElevatedButton(
-                    onPressed: _showResetPasswordDialog,
-                    child: Text('重置数据库密码'),
-                  ),
-                ]
-            )
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ElevatedButton(
+                onPressed: _createDatabase,
+                child: Text(localizations?.createDatabase ?? 'Create Database'),
+              ),
+              SizedBox(width: 10), // 添加间距
+              ElevatedButton(
+                onPressed: _showResetPasswordDialog,
+                child: Text(localizations?.resetPassword ?? 'Reset Password'),
+              ),
+            ])
           ],
         ),
       ),
