@@ -1,7 +1,9 @@
+// In PasswordDetailsDialog.dart
 import 'package:flutter/material.dart';
 import 'package:mypwbox/helpers.dart';
 import 'dart:async';
 import 'package:otp/otp.dart';
+import 'l10n/app_localizations.dart'; // Import localization file
 
 class PasswordDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> password;
@@ -99,22 +101,24 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
-      title: Text('Password Details'),
+      title: Text(l10n?.title ?? 'Title'),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Title: ${widget.password['title']}'),
+            Text('${l10n?.title}: ${widget.password['title']}'),
             SizedBox(height: 10),
-            Text('Account: ${widget.password['account']}'),
+            Text('${l10n?.account}: ${widget.password['account']}'),
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
-                      'Password: ${_isPasswordVisible ?
+                      '${l10n?.password}: ${_isPasswordVisible ?
                       secureDecrypt(widget.password['password'], widget.secureHash) : '********'}'),
                 ),
                 IconButton(
@@ -130,14 +134,14 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
               ],
             ),
             SizedBox(height: 10),
-            Text('Comment: ${widget.password['comment']}'),
+            Text('${l10n?.comment}: ${widget.password['comment']}'),
             SizedBox(height: 10),
-            Text('Created At: ${_formatDate(widget.password['created_at'])}'),
+            Text('${l10n?.createdAt}: ${_formatDate(widget.password['created_at'])}'),
             SizedBox(height: 10),
-            Text('Updated At: ${_formatDate(widget.password['updated_at'])}'),
+            Text('${l10n?.updatedAt}: ${_formatDate(widget.password['updated_at'])}'),
             if (_isTotp) ...[
               SizedBox(height: 20),
-              Text('TOTP Code: ${_totpCode}'),
+              Text('TOTP: ${_totpCode}'),
               SizedBox(height: 10),
               SizedBox(
                 width: 50,
@@ -163,7 +167,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Close'),
+          child: Text(l10n?.close ?? 'Close'),
         ),
       ],
     );

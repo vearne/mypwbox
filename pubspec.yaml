@@ -34,15 +34,17 @@ dependencies:
   sqflite: ^2.0.0+4  # 确保使用正确的版本
   path: ^1.8.0
   path_provider: ^2.0.10
-  intl: ^0.17.0
+  intl: ^0.19.0
   crypto: ^3.0.0
   otp: 3.1.4
   cupertino_icons: ^1.0.6
   shared_preferences: ^2.2.2
-  minio: 3.5.0
+  minio: 3.5.7
   window_manager: ^0.3.8
   crclib: 3.0.0
   encrypt: ^5.0.0
+  flutter_localization: 0.3.0
+
 
 dev_dependencies:
   flutter_test:
@@ -53,7 +55,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

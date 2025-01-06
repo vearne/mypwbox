@@ -1,6 +1,7 @@
 // lib/s3_config_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/app_localizations.dart'; // Import AppLocalizations
 
 class S3ConfigScreen extends StatefulWidget {
   @override
@@ -42,14 +43,17 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
     await prefs.setString('secretAccessKey', _secretAccessKey);
     await prefs.setString('bucketName', _bucketName);
     await prefs.setString('dirpath', _dirpath);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('配置已保存')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.saveConfig ?? '配置已保存')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(title: Text('S3 配置')),
+      appBar: AppBar(title: Text(localizations.s3Config ?? 'S3 配置')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -57,7 +61,7 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
           child: Column(
             children: [
               SwitchListTile(
-                title: Text('离线模式'),
+                title: Text(localizations.offlineMode ?? '离线模式'),
                 value: _offline,
                 onChanged: (value) {
                   setState(() {
@@ -68,28 +72,28 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
               if (!_offline) ...[
                 TextFormField(
                   initialValue: _endpoint,
-                  decoration: InputDecoration(labelText: 'Endpoint'),
+                  decoration: InputDecoration(labelText: localizations.endpoint ?? 'Endpoint'),
                   onSaved: (value) => _endpoint = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _accessKeyID,
-                  decoration: InputDecoration(labelText: 'Access Key ID'),
+                  decoration: InputDecoration(labelText: localizations.accessKeyID ?? 'Access Key ID'),
                   onSaved: (value) => _accessKeyID = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _secretAccessKey,
-                  decoration: InputDecoration(labelText: 'Secret Access Key'),
+                  decoration: InputDecoration(labelText: localizations.secretAccessKey ?? 'Secret Access Key'),
                   onSaved: (value) => _secretAccessKey = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _bucketName,
-                  decoration: InputDecoration(labelText: 'bucket name'),
+                  decoration: InputDecoration(labelText: localizations.bucketName ?? 'Bucket Name'),
                   onSaved: (value) => _bucketName = value ?? '',
                 ),
                 SizedBox(height: 20),
                 TextFormField(
                   initialValue: _dirpath,
-                  decoration: InputDecoration(labelText: '目录路径'),
+                  decoration: InputDecoration(labelText: localizations.directoryPath ?? 'Directory Path'),
                   onSaved: (value) => _dirpath = value ?? '',
                 ),
                 SizedBox(height: 20),
@@ -101,7 +105,7 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
                     _saveConfig();
                   }
                 },
-                child: Text('保存配置'),
+                child: Text(localizations.saveConfig ?? '保存配置'),
               ),
             ],
           ),
