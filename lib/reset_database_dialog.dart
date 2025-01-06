@@ -33,8 +33,8 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
     if (_usernameController.text.isEmpty ||
         _oldPasswordController.text.isEmpty ||
         _newPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(localizations!.enterUsernamePassword!)));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localizations!.enterUsernamePassword!)));
       return;
     }
 
@@ -54,8 +54,8 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
         version: 1,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(localizations!.incorrectUsernamePassword!)));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localizations!.incorrectUsernamePassword!)));
       return;
     }
 
@@ -77,7 +77,8 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
 
       _newDatabase = await createDatabase(dbPath, newSecureHash);
       for (var item in passwords) {
-        String password = secureDecrypt(item['password'] as String, oldSecureHash);
+        String password =
+            secureDecrypt(item['password'] as String, oldSecureHash);
         Password newItem = Password.fromMap(item);
         newItem.password = secureEncrypt(password, newSecureHash);
         await _newDatabase.insert('passwords', newItem.toMap());
@@ -89,8 +90,8 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
           .showSnackBar(SnackBar(content: Text(localizations!.resetPassword!)));
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('${localizations!.error!}: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${localizations!.error!}: $e')));
     }
   }
 
@@ -114,7 +115,9 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
               labelText: localizations.password!,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isOldPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isOldPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
                 onPressed: () {
                   setState(() {
@@ -131,7 +134,9 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
               labelText: localizations.password!,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isNewPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
                 onPressed: () {
                   setState(() {

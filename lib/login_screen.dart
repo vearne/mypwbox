@@ -45,22 +45,24 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
 
   Future<bool> _showExitConfirmationDialog() async {
     return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)?.confirmExit ?? 'Exit Confirmation'),
-        content: Text(AppLocalizations.of(context)?.areYouSureExit ?? 'Are you sure you want to exit the application?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(AppLocalizations.of(context)?.confirmExit ??
+                'Exit Confirmation'),
+            content: Text(AppLocalizations.of(context)?.areYouSureExit ??
+                'Are you sure you want to exit the application?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(AppLocalizations.of(context)?.yes ?? 'Yes'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(AppLocalizations.of(context)?.yes ?? 'Yes'),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
   }
 
@@ -77,8 +79,9 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
       final dbPath = path.join(directory.path, dbName);
       bool databaseExists = await databaseFactory.databaseExists(dbPath);
       if (!databaseExists) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseNotExist ?? 'Database does not exist')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context)?.databaseNotExist ??
+                'Database does not exist')));
         return;
       }
 
@@ -88,15 +91,17 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
               builder: (context) => PasswordListScreen(
                   username: _usernameController.text, secureHash: secureHash)));
     } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.enterUsernamePassword ?? 'Please enter username and password')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)?.enterUsernamePassword ??
+              'Please enter username and password')));
     }
   }
 
   void _createDatabase() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.enterUsernamePassword ?? 'Please enter username and password')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)?.enterUsernamePassword ??
+              'Please enter username and password')));
       return;
     }
 
@@ -107,8 +112,9 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
 
     bool databaseExists = await databaseFactory.databaseExists(dbPath);
     if (databaseExists) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseExists ?? 'Database already exists')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)?.databaseExists ??
+              'Database already exists')));
       return;
     }
 
@@ -118,11 +124,13 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
 
     try {
       await createDatabase(dbPath, secureHash);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.databaseCreated ?? 'Database created successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)?.databaseCreated ??
+              'Database created successfully')));
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)?.databaseCreationFailed ?? 'Database creation failed'}: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              '${AppLocalizations.of(context)?.databaseCreationFailed ?? 'Database creation failed'}: $e')));
     }
   }
 

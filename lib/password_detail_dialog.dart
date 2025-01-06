@@ -118,8 +118,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
               children: [
                 Expanded(
                   child: Text(
-                      '${l10n?.password}: ${_isPasswordVisible ?
-                      secureDecrypt(widget.password['password'], widget.secureHash) : '********'}'),
+                      '${l10n?.password}: ${_isPasswordVisible ? secureDecrypt(widget.password['password'], widget.secureHash) : '********'}'),
                 ),
                 IconButton(
                   icon: Icon(_isPasswordVisible
@@ -136,9 +135,11 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
             SizedBox(height: 10),
             Text('${l10n?.comment}: ${widget.password['comment']}'),
             SizedBox(height: 10),
-            Text('${l10n?.createdAt}: ${_formatDate(widget.password['created_at'])}'),
+            Text(
+                '${l10n?.createdAt}: ${_formatDate(widget.password['created_at'])}'),
             SizedBox(height: 10),
-            Text('${l10n?.updatedAt}: ${_formatDate(widget.password['updated_at'])}'),
+            Text(
+                '${l10n?.updatedAt}: ${_formatDate(widget.password['updated_at'])}'),
             if (_isTotp) ...[
               SizedBox(height: 20),
               Text('TOTP: ${_totpCode}'),

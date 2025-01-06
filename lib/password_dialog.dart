@@ -26,11 +26,16 @@ class _PasswordDialogState extends State<PasswordDialog> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.passwordToUpdate?['title']);
-    _accountController = TextEditingController(text: widget.passwordToUpdate?['account']);
-    _passwordController = TextEditingController(text: widget.passwordToUpdate != null
-        ? widget.passwordToUpdate!["password"] : '');
-    _commentController = TextEditingController(text: widget.passwordToUpdate?['comment']);
+    _titleController =
+        TextEditingController(text: widget.passwordToUpdate?['title']);
+    _accountController =
+        TextEditingController(text: widget.passwordToUpdate?['account']);
+    _passwordController = TextEditingController(
+        text: widget.passwordToUpdate != null
+            ? widget.passwordToUpdate!["password"]
+            : '');
+    _commentController =
+        TextEditingController(text: widget.passwordToUpdate?['comment']);
   }
 
   @override
@@ -38,7 +43,9 @@ class _PasswordDialogState extends State<PasswordDialog> {
     final localizations = AppLocalizations.of(context); // Get localized strings
 
     return AlertDialog(
-      title: Text(widget.passwordToUpdate == null ? localizations!.add! : localizations!.update!),
+      title: Text(widget.passwordToUpdate == null
+          ? localizations!.add!
+          : localizations!.update!),
       content: SingleChildScrollView(
         child: Column(
           children: [
@@ -93,7 +100,9 @@ class _PasswordDialogState extends State<PasswordDialog> {
             widget.onSave(newPassword);
             Navigator.pop(context);
           },
-          child: Text(widget.passwordToUpdate == null ? localizations!.add! : localizations!.update!),
+          child: Text(widget.passwordToUpdate == null
+              ? localizations!.add!
+              : localizations!.update!),
         ),
       ],
     );

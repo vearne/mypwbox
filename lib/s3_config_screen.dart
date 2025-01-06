@@ -44,7 +44,8 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
     await prefs.setString('bucketName', _bucketName);
     await prefs.setString('dirpath', _dirpath);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)!.saveConfig ?? '配置已保存')),
+      SnackBar(
+          content: Text(AppLocalizations.of(context)!.saveConfig ?? '配置已保存')),
     );
   }
 
@@ -72,28 +73,35 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
               if (!_offline) ...[
                 TextFormField(
                   initialValue: _endpoint,
-                  decoration: InputDecoration(labelText: localizations.endpoint ?? 'Endpoint'),
+                  decoration: InputDecoration(
+                      labelText: localizations.endpoint ?? 'Endpoint'),
                   onSaved: (value) => _endpoint = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _accessKeyID,
-                  decoration: InputDecoration(labelText: localizations.accessKeyID ?? 'Access Key ID'),
+                  decoration: InputDecoration(
+                      labelText: localizations.accessKeyID ?? 'Access Key ID'),
                   onSaved: (value) => _accessKeyID = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _secretAccessKey,
-                  decoration: InputDecoration(labelText: localizations.secretAccessKey ?? 'Secret Access Key'),
+                  decoration: InputDecoration(
+                      labelText:
+                          localizations.secretAccessKey ?? 'Secret Access Key'),
                   onSaved: (value) => _secretAccessKey = value ?? '',
                 ),
                 TextFormField(
                   initialValue: _bucketName,
-                  decoration: InputDecoration(labelText: localizations.bucketName ?? 'Bucket Name'),
+                  decoration: InputDecoration(
+                      labelText: localizations.bucketName ?? 'Bucket Name'),
                   onSaved: (value) => _bucketName = value ?? '',
                 ),
                 SizedBox(height: 20),
                 TextFormField(
                   initialValue: _dirpath,
-                  decoration: InputDecoration(labelText: localizations.directoryPath ?? 'Directory Path'),
+                  decoration: InputDecoration(
+                      labelText:
+                          localizations.directoryPath ?? 'Directory Path'),
                   onSaved: (value) => _dirpath = value ?? '',
                 ),
                 SizedBox(height: 20),
