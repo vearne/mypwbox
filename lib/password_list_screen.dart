@@ -99,15 +99,15 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     } else {
       passwords = await _database.query(
         'passwords',
-        where: 'LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
-        whereArgs: ['%$query%', '%$query%'],
+        where: 'LOWER(title) LIKE ?',
+        whereArgs: ['%$query%'],
         orderBy: 'id ASC',
         limit: _pageSize,
         offset: offset,
       );
       totalCount = Sqflite.firstIntValue(await _database.rawQuery(
-            'SELECT COUNT(*) FROM passwords WHERE LOWER(title) LIKE ? OR LOWER(account) LIKE ?',
-            ['%$query%', '%$query%'],
+            'SELECT COUNT(*) FROM passwords WHERE LOWER(title) LIKE ?',
+            ['%$query%'],
           )) ??
           0;
     }
@@ -271,7 +271,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
                       return Card(
                         child: ListTile(
                           title: Text(password['title']),
-                          subtitle: Text(password['account']),
+                          // subtitle: Text(password['account']),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
