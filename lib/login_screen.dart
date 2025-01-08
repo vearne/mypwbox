@@ -164,50 +164,56 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                  labelText: localizations?.username ?? 'Username'),
-            ),
-            TextField(
-              controller: _passwordController,
-              obscureText: _obscureText,
-              enableSuggestions: false,
-              autocorrect: false,
-              decoration: InputDecoration(
-                labelText: localizations?.password ?? 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility : Icons.visibility_off,
+        child: Form(
+          child: Column(
+            children: [
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                    labelText: localizations?.username ?? 'Username'),
+              ),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscureText,
+                enableSuggestions: false,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: localizations?.password ?? 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText; // 切换显示/隐藏
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText; // 切换显示/隐藏
-                    });
-                  },
                 ),
+                onSubmitted: (value) {
+                  _onLogin(); // Trigger login on Enter key press
+                },
               ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _onLogin,
-              child: Text(localizations?.login ?? 'Login'),
-            ),
-            SizedBox(height: 10),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _createDatabase,
-                child: Text(localizations?.createDatabase ?? 'Create Database'),
+                onPressed: _onLogin,
+                child: Text(localizations?.login ?? 'Login'),
               ),
-              SizedBox(width: 10), // 添加间距
-              ElevatedButton(
-                onPressed: _showResetPasswordDialog,
-                child: Text(localizations?.resetPassword ?? 'Reset Password'),
-              ),
-            ])
-          ],
+              SizedBox(height: 10),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                ElevatedButton(
+                  onPressed: _createDatabase,
+                  child:
+                      Text(localizations?.createDatabase ?? 'Create Database'),
+                ),
+                SizedBox(width: 10), // 添加间距
+                ElevatedButton(
+                  onPressed: _showResetPasswordDialog,
+                  child: Text(localizations?.resetPassword ?? 'Reset Password'),
+                ),
+              ])
+            ],
+          ),
         ),
       ),
     );
