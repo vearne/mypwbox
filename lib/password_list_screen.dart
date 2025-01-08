@@ -177,7 +177,8 @@ class _PasswordListScreenState extends State<PasswordListScreen>
             if (passwordToUpdate == null) {
               _addPassword(newPassword);
             } else {
-              _updatePassword(mutablePasswordToUpdate!['id'], newPassword);
+              newPassword['created_at'] = mutablePasswordToUpdate!['created_at'];
+              _updatePassword(mutablePasswordToUpdate['id'], newPassword);
             }
           },
         );
