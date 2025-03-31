@@ -4,6 +4,7 @@ import 'package:mypwbox/helpers.dart';
 import 'dart:async';
 import 'package:otp/otp.dart';
 import 'l10n/app_localizations.dart'; // Import localization file
+import 'package:flutter/services.dart'; // 导入剪贴板服务
 
 class PasswordDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> password;
@@ -127,6 +128,20 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                   onPressed: () {
                     setState(() {
                       _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
+                // 新增的复制图标
+                IconButton(
+                  icon: Icon(Icons.copy), // 复制图标
+                  onPressed: () {
+                    // 复制密码到剪贴板
+                    final password = secureDecrypt(widget.password['password'], widget.secureHash);
+                    Clipboard.setData(ClipboardData(text: password)).then((_) {
+                      // 可选：显示一个提示，表示密码已复制
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n?.passwordCopied ?? 'Password copied!')),
+                      );
                     });
                   },
                 ),

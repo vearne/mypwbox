@@ -58,6 +58,7 @@ class AppLocalizations {
       'exitConfirmation': 'Exit Confirmation',
       'uploadingDatabase': 'Uploading database to S3...',
       'uploadFailed': 'Failed to upload database to S3:',
+      'passwordCopied': 'Password copied!',
     },
     'zh': {
       'login': '登录',
@@ -104,6 +105,7 @@ class AppLocalizations {
       'exitConfirmation': '退出确认',
       'uploadingDatabase': '正在上传数据库到 S3...',
       'uploadFailed': '上传数据库到 S3 失败:',
+      'passwordCopied': '密码已复制',
     },
   };
 
@@ -151,6 +153,7 @@ class AppLocalizations {
   String? get uploadingDatabase => _localizedValues[locale.languageCode]?['uploadingDatabase'];
   String? get uploadFailed => _localizedValues[locale.languageCode]?['uploadFailed'];
   String? get exitConfirmation => _localizedValues[locale.languageCode]?['exitConfirmation'];
+  String? get passwordCopied => _localizedValues[locale.languageCode]?['passwordCopied'];
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
