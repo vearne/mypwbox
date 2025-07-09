@@ -23,6 +23,31 @@ make dmg
 * [Tencent COS](https://cloud.tencent.com/document/product/436/6224)
 * MinIO
 
+## 开发
+### 安装 Flutter
+为了开发mypwbox，你需要安装 [Flutter](https://flutter.dev/) 
+
+官方安装指导 [Flutter installation guide](https://docs.flutter.dev/get-started/install) 
+
+- [下载 Flutter](https://docs.flutter.dev/get-started/install)
+
+安装完成之后，验证一下
+```bash
+flutter --version
+```
+### Clone代码库，并在本地运行
+```bash
+# Clone the repository
+git clone https://github.com/vearne/mypwbox.git
+cd mypwbox
+
+# Install dependencies
+flutter pub get
+
+# Run on macOS
+flutter run -d macos
+```
+
 ![](./img/s3.jpg)
 ![](./img/login.jpg)
 ![](./img/list.jpg)
