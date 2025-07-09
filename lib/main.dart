@@ -85,32 +85,34 @@ void main() async {
   }
 
   // 启动应用
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 // 应用主界面
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Password Manager',
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: [
-        const Locale('en', ''),
-        const Locale('zh', ''),
+      supportedLocales: const [
+        Locale('en', ''),
+        Locale('zh', ''),
       ],
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginScreen(),
+      home: const LoginScreen(),
       // 默认显示登录界面
       routes: {
-        '/login': (context) => LoginScreen(), // 登录界面
-        '/s3config': (context) => S3ConfigScreen(), // S3 配置界面
+        '/login': (context) => const LoginScreen(), // 登录界面
+        '/s3config': (context) => const S3ConfigScreen(), // S3 配置界面
       },
     );
   }

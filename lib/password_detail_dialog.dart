@@ -10,7 +10,7 @@ class PasswordDetailsDialog extends StatefulWidget {
   final Map<String, dynamic> password;
   final String secureHash;
 
-  PasswordDetailsDialog({
+  const PasswordDetailsDialog({super.key, 
     required this.password,
     required this.secureHash,
   });
@@ -74,7 +74,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
 
     if (_isTotp && _timer == null) {
       // 启动倒计时
-      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (mounted) {
           // 检查 mounted 属性
           if (_timeRemaining > 0) {
@@ -111,9 +111,9 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${l10n?.title}: ${widget.password['title']}'),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text('${l10n?.account}: ${widget.password['account']}'),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -133,7 +133,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                 ),
                 // 新增的复制图标
                 IconButton(
-                  icon: Icon(Icons.copy), // 复制图标
+                  icon: const Icon(Icons.copy), // 复制图标
                   onPressed: () {
                     // 复制密码到剪贴板
                     final password = secureDecrypt(widget.password['password'], widget.secureHash);
@@ -147,18 +147,18 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text('${l10n?.comment}: ${widget.password['comment']}'),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
                 '${l10n?.createdAt}: ${_formatDate(widget.password['created_at'])}'),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
                 '${l10n?.updatedAt}: ${_formatDate(widget.password['updated_at'])}'),
             if (_isTotp) ...[
-              SizedBox(height: 20),
-              Text('TOTP: ${_totpCode}'),
-              SizedBox(height: 10),
+              const SizedBox(height: 20),
+              Text('TOTP: $_totpCode'),
+              const SizedBox(height: 10),
               SizedBox(
                 width: 50,
                 height: 50,
@@ -170,8 +170,8 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                       strokeWidth: 4,
                     ),
                     Text(
-                      '${_timeRemaining}',
-                      style: TextStyle(fontSize: 16),
+                      '$_timeRemaining',
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ],
                 ),

@@ -11,6 +11,8 @@ import 'reset_database_dialog.dart';
 import 'l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -70,11 +72,11 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     if (_usernameController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty) {
       String secureHash =
-          _passwordController.text + "__mypwbox__" + _usernameController.text;
+          "${_passwordController.text}__mypwbox__${_usernameController.text}";
       secureHash = hashN(secureHash, 100);
 
       final directory = await getApplicationDocumentsDirectory();
-      String dbName = "__mypwbox__" + _usernameController.text;
+      String dbName = "__mypwbox__${_usernameController.text}";
       dbName = hashN(dbName, 100);
       final dbPath = path.join(directory.path, dbName);
       bool databaseExists = await databaseFactory.databaseExists(dbPath);
@@ -106,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     }
 
     final directory = await getApplicationDocumentsDirectory();
-    String dbName = "__mypwbox__" + _usernameController.text;
+    String dbName = "__mypwbox__${_usernameController.text}";
     dbName = hashN(dbName, 100);
     final dbPath = path.join(directory.path, dbName);
 
@@ -119,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     }
 
     String secureHash =
-        _passwordController.text + "__mypwbox__" + _usernameController.text;
+        "${_passwordController.text}__mypwbox__${_usernameController.text}";
     secureHash = hashN(secureHash, 100);
 
     try {
@@ -138,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     showDialog(
       context: context,
       builder: (context) {
-        return ResetDatabaseDialog();
+        return const ResetDatabaseDialog();
       },
     );
   }
@@ -152,11 +154,11 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
         title: Text(localizations?.login ?? 'Login'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => S3ConfigScreen()),
+                MaterialPageRoute(builder: (context) => const S3ConfigScreen()),
               );
             },
           ),
@@ -194,19 +196,19 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
                   _onLogin(); // Trigger login on Enter key press
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _onLogin,
                 child: Text(localizations?.login ?? 'Login'),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 ElevatedButton(
                   onPressed: _createDatabase,
                   child:
                       Text(localizations?.createDatabase ?? 'Create Database'),
                 ),
-                SizedBox(width: 10), // 添加间距
+                const SizedBox(width: 10), // 添加间距
                 ElevatedButton(
                   onPressed: _showResetPasswordDialog,
                   child: Text(localizations?.resetPassword ?? 'Reset Password'),

@@ -16,7 +16,7 @@ class PasswordListScreen extends StatefulWidget {
   final String username;
   final String secureHash;
 
-  PasswordListScreen({required this.username, required this.secureHash});
+  const PasswordListScreen({super.key, required this.username, required this.secureHash});
 
   @override
   _PasswordListScreenState createState() => _PasswordListScreenState();
@@ -47,13 +47,13 @@ class _PasswordListScreenState extends State<PasswordListScreen>
 
   Future<void> _initializeDatabase() async {
     final directory = await getApplicationDocumentsDirectory();
-    dbName = "__mypwbox__" + widget.username;
+    dbName = "__mypwbox__${widget.username}";
     dbName = hashN(dbName, 100);
     dbPath = path.join(directory.path, dbName);
 
     try {
       _database = await openDatabase(dbPath,
-          password: "${widget.secureHash}", version: 1);
+          password: widget.secureHash, version: 1);
       _loadPasswords();
     } catch (e) {
       debugPrint('Database open failed, Incorrect username or password: $e');
@@ -241,10 +241,10 @@ class _PasswordListScreenState extends State<PasswordListScreen>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Password Manager'),
+            const Text('Password Manager'),
             Text(
               'Database: ${widget.username}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
             ),
           ],
         ),
@@ -255,7 +255,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Search',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
@@ -264,7 +264,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
           ),
           Expanded(
             child: _filteredPasswords.isEmpty
-                ? Center(child: Text('No passwords found.'))
+                ? const Center(child: Text('No passwords found.'))
                 : ListView.builder(
                     itemCount: _filteredPasswords.length,
                     itemBuilder: (context, index) {
@@ -277,16 +277,16 @@ class _PasswordListScreenState extends State<PasswordListScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.visibility),
+                                icon: const Icon(Icons.visibility),
                                 onPressed: () => _showPasswordDetails(password),
                               ),
                               IconButton(
-                                icon: Icon(Icons.edit),
+                                icon: const Icon(Icons.edit),
                                 onPressed: () => _showAddPasswordDialog(
                                     passwordToUpdate: password),
                               ),
                               IconButton(
-                                icon: Icon(Icons.delete),
+                                icon: const Icon(Icons.delete),
                                 onPressed: () =>
                                     _confirmDeletePassword(password['id']),
                               ),
@@ -301,14 +301,14 @@ class _PasswordListScreenState extends State<PasswordListScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: Icon(Icons.chevron_left),
+                icon: const Icon(Icons.chevron_left),
                 onPressed: _currentPage > 0
                     ? () => _changePage(_currentPage - 1)
                     : null,
               ),
               Text('Page ${_currentPage + 1}'),
               IconButton(
-                icon: Icon(Icons.chevron_right),
+                icon: const Icon(Icons.chevron_right),
                 onPressed:
                     _hasNextPage ? () => _changePage(_currentPage + 1) : null,
               ),
@@ -318,7 +318,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddPasswordDialog(),
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -8,7 +8,7 @@ import 'dart:io';
 import 'l10n/app_localizations.dart'; // Import AppLocalizations
 
 class ResetDatabaseDialog extends StatefulWidget {
-  ResetDatabaseDialog();
+  const ResetDatabaseDialog({super.key});
 
   @override
   _ResetDatabaseDialogState createState() => _ResetDatabaseDialogState();
@@ -39,11 +39,11 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
     }
 
     String oldSecureHash =
-        _oldPasswordController.text + "__mypwbox__" + _usernameController.text;
+        "${_oldPasswordController.text}__mypwbox__${_usernameController.text}";
     oldSecureHash = hashN(oldSecureHash, 100);
 
     final directory = await getApplicationDocumentsDirectory();
-    String dbName = "__mypwbox__" + _usernameController.text;
+    String dbName = "__mypwbox__${_usernameController.text}";
     dbName = hashN(dbName, 100);
     final dbPath = path.join(directory.path, dbName);
 
@@ -60,7 +60,7 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
     }
 
     String newSecureHash =
-        _newPasswordController.text + "__mypwbox__" + _usernameController.text;
+        "${_newPasswordController.text}__mypwbox__${_usernameController.text}";
     newSecureHash = hashN(newSecureHash, 100);
 
     try {

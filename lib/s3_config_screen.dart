@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart'; // Import AppLocalizations
 
 class S3ConfigScreen extends StatefulWidget {
+  const S3ConfigScreen({super.key});
+
   @override
   _S3ConfigScreenState createState() => _S3ConfigScreenState();
 }
@@ -96,7 +98,7 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
                       labelText: localizations.bucketName ?? 'Bucket Name'),
                   onSaved: (value) => _bucketName = value ?? '',
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextFormField(
                   initialValue: _dirpath,
                   decoration: InputDecoration(
@@ -104,7 +106,7 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
                           localizations.directoryPath ?? 'Directory Path'),
                   onSaved: (value) => _dirpath = value ?? '',
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
               ElevatedButton(
                 onPressed: () {

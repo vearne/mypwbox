@@ -6,7 +6,7 @@ class PasswordDialog extends StatefulWidget {
   final Map<String, dynamic>? passwordToUpdate;
   final Function(Map<String, dynamic>) onSave;
 
-  PasswordDialog({
+  const PasswordDialog({super.key, 
     required this.context,
     this.passwordToUpdate,
     required this.onSave,
@@ -51,17 +51,17 @@ class _PasswordDialogState extends State<PasswordDialog> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: InputDecoration(labelText: localizations!.title),
+              decoration: InputDecoration(labelText: localizations.title),
             ),
             TextField(
               controller: _accountController,
-              decoration: InputDecoration(labelText: localizations!.account),
+              decoration: InputDecoration(labelText: localizations.account),
             ),
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
-                labelText: localizations!.password,
+                labelText: localizations.password,
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscureText ? Icons.visibility : Icons.visibility_off,
@@ -76,7 +76,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
             ),
             TextField(
               controller: _commentController,
-              decoration: InputDecoration(labelText: localizations!.comment),
+              decoration: InputDecoration(labelText: localizations.comment),
             ),
           ],
         ),
@@ -84,7 +84,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(localizations!.cancel!),
+          child: Text(localizations.cancel!),
         ),
         ElevatedButton(
           onPressed: () {
@@ -101,8 +101,8 @@ class _PasswordDialogState extends State<PasswordDialog> {
             Navigator.pop(context);
           },
           child: Text(widget.passwordToUpdate == null
-              ? localizations!.add!
-              : localizations!.update!),
+              ? localizations.add!
+              : localizations.update!),
         ),
       ],
     );
