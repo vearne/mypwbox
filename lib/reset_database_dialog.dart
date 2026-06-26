@@ -38,13 +38,11 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
       return;
     }
 
-    String oldSecureHash =
-        "${_oldPasswordController.text}__mypwbox__${_usernameController.text}";
-    oldSecureHash = hashN(oldSecureHash, 100);
+    String oldSecureHash = computeSecureHash(
+        _usernameController.text, _oldPasswordController.text);
 
     final directory = await getApplicationDocumentsDirectory();
-    String dbName = "__mypwbox__${_usernameController.text}";
-    dbName = hashN(dbName, 100);
+    String dbName = computeDbName(_usernameController.text);
     final dbPath = path.join(directory.path, dbName);
 
     try {
@@ -59,9 +57,8 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
       return;
     }
 
-    String newSecureHash =
-        "${_newPasswordController.text}__mypwbox__${_usernameController.text}";
-    newSecureHash = hashN(newSecureHash, 100);
+    String newSecureHash = computeSecureHash(
+        _usernameController.text, _newPasswordController.text);
 
     try {
       passwords = await _oldDatabase.query(

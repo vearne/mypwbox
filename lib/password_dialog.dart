@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'l10n/app_localizations.dart'; // Import AppLocalizations
+import 'password.dart';
+import 'l10n/app_localizations.dart';
 
 class PasswordDialog extends StatefulWidget {
-  final BuildContext context;
-  final Map<String, dynamic>? passwordToUpdate;
-  final Function(Map<String, dynamic>) onSave;
+  final Password? passwordToUpdate;
+  final Function(Password) onSave;
 
-  const PasswordDialog({super.key, 
-    required this.context,
+  const PasswordDialog({
+    super.key,
     this.passwordToUpdate,
     required this.onSave,
   });
@@ -17,6 +17,7 @@ class PasswordDialog extends StatefulWidget {
 }
 
 class _PasswordDialogState extends State<PasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _accountController;
   late TextEditingController _passwordController;
@@ -27,58 +28,79 @@ class _PasswordDialogState extends State<PasswordDialog> {
   void initState() {
     super.initState();
     _titleController =
-        TextEditingController(text: widget.passwordToUpdate?['title']);
+        TextEditingController(text: widget.passwordToUpdate?.title);
     _accountController =
-        TextEditingController(text: widget.passwordToUpdate?['account']);
+        TextEditingController(text: widget.passwordToUpdate?.account);
     _passwordController = TextEditingController(
-        text: widget.passwordToUpdate != null
-            ? widget.passwordToUpdate!["password"]
-            : '');
+        text: widget.passwordToUpdate?.password ?? '');
     _commentController =
-        TextEditingController(text: widget.passwordToUpdate?['comment']);
+        TextEditingController(text: widget.passwordToUpdate?.comment);
   }
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context); // Get localized strings
+    final localizations = AppLocalizations.of(context);
 
     return AlertDialog(
       title: Text(widget.passwordToUpdate == null
           ? localizations!.add!
           : localizations!.update!),
       content: SingleChildScrollView(
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(labelText: localizations.title),
-            ),
-            TextField(
-              controller: _accountController,
-              decoration: InputDecoration(labelText: localizations.account),
-            ),
-            TextField(
-              controller: _passwordController,
-              obscureText: _obscureText,
-              decoration: InputDecoration(
-                labelText: localizations.password,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureText ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText; // Toggle visibility
-                    });
-                  },
-                ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(labelText: localizations.title),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return localizations.titleRequired ?? 'Title is required';
+                  }
+                  return null;
+                },
               ),
-            ),
-            TextField(
-              controller: _commentController,
-              decoration: InputDecoration(labelText: localizations.comment),
-            ),
-          ],
+              TextFormField(
+                controller: _accountController,
+                decoration: InputDecoration(labelText: localizations.account),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return localizations.accountRequired ??
+                        'Account is required';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscureText,
+                decoration: InputDecoration(
+                  labelText: localizations.password,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return localizations.passwordRequired ??
+                        'Password is required';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _commentController,
+                decoration: InputDecoration(labelText: localizations.comment),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -88,17 +110,19 @@ class _PasswordDialogState extends State<PasswordDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            final newPassword = {
-              'title': _titleController.text,
-              'account': _accountController.text,
-              'password': _passwordController.text,
-              'comment': _commentController.text,
-              'created_at': DateTime.now().toIso8601String(),
-              'updated_at': DateTime.now().toIso8601String(),
-            };
+            if (_formKey.currentState!.validate()) {
+              final newPassword = Password(
+                title: _titleController.text.trim(),
+                account: _accountController.text.trim(),
+                password: _passwordController.text,
+                comment: _commentController.text,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
 
-            widget.onSave(newPassword);
-            Navigator.pop(context);
+              widget.onSave(newPassword);
+              Navigator.pop(context);
+            }
           },
           child: Text(widget.passwordToUpdate == null
               ? localizations.add!

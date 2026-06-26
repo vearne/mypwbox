@@ -58,7 +58,11 @@ class AppLocalizations {
       'exitConfirmation': 'Exit Confirmation',
       'uploadingDatabase': 'Uploading database to S3...',
       'uploadFailed': 'Failed to upload database to S3:',
-      'passwordCopied': 'Password copied!',
+      'passwordCopied': 'Password copied! Clipboard clears in 30s.',
+      'page': 'Page',
+      'titleRequired': 'Title is required',
+      'accountRequired': 'Account is required',
+      'passwordRequired': 'Password is required',
     },
     'zh': {
       'login': '登录',
@@ -105,7 +109,11 @@ class AppLocalizations {
       'exitConfirmation': '退出确认',
       'uploadingDatabase': '正在上传数据库到 S3...',
       'uploadFailed': '上传数据库到 S3 失败:',
-      'passwordCopied': '密码已复制',
+      'passwordCopied': '密码已复制，30秒后自动清空剪贴板。',
+      'page': '页',
+      'titleRequired': '标题不能为空',
+      'accountRequired': '账户不能为空',
+      'passwordRequired': '密码不能为空',
     },
   };
 
@@ -154,6 +162,10 @@ class AppLocalizations {
   String? get uploadFailed => _localizedValues[locale.languageCode]?['uploadFailed'];
   String? get exitConfirmation => _localizedValues[locale.languageCode]?['exitConfirmation'];
   String? get passwordCopied => _localizedValues[locale.languageCode]?['passwordCopied'];
+  String? get page => _localizedValues[locale.languageCode]?['page'];
+  String? get titleRequired => _localizedValues[locale.languageCode]?['titleRequired'];
+  String? get accountRequired => _localizedValues[locale.languageCode]?['accountRequired'];
+  String? get passwordRequired => _localizedValues[locale.languageCode]?['passwordRequired'];
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

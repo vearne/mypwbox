@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:minio/io.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart' as path; // Rename the import to avoid conflict
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:minio/minio.dart';
 import 'password_detail_dialog.dart';
+import 'password.dart';
 import 'package:window_manager/window_manager.dart';
 import 'helpers.dart';
 import 'password_dialog.dart';
@@ -25,7 +27,7 @@ class PasswordListScreen extends StatefulWidget {
 class _PasswordListScreenState extends State<PasswordListScreen>
     with WindowListener {
   late Database _database;
-  List<Map<String, dynamic>> _filteredPasswords = [];
+  List<Password> _filteredPasswords = [];
   final TextEditingController _searchController = TextEditingController();
 
   int _currentPage = 0;
@@ -47,8 +49,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
 
   Future<void> _initializeDatabase() async {
     final directory = await getApplicationDocumentsDirectory();
-    dbName = "__mypwbox__${widget.username}";
-    dbName = hashN(dbName, 100);
+    dbName = computeDbName(widget.username);
     dbPath = path.join(directory.path, dbName);
 
     try {
@@ -113,7 +114,8 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     }
 
     setState(() {
-      _filteredPasswords = passwords;
+      _filteredPasswords =
+          passwords.map((m) => Password.fromMap(m.cast<String, dynamic>())).toList();
       _hasNextPage = (offset + _pageSize) < totalCount;
     });
   }
@@ -125,11 +127,11 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     _loadPasswords();
   }
 
-  Future<void> _addPassword(Map<String, dynamic> newPassword) async {
+  Future<void> _addPassword(Password newPassword) async {
     // 密码存储前进行加密
-    newPassword["password"] =
-        secureEncrypt(newPassword["password"], widget.secureHash);
-    await _database.insert('passwords', newPassword);
+    newPassword.password =
+        secureEncrypt(newPassword.password, widget.secureHash);
+    await _database.insert('passwords', newPassword.toMap());
     setState(() {
       _isStale = true;
     });
@@ -137,12 +139,12 @@ class _PasswordListScreenState extends State<PasswordListScreen>
   }
 
   Future<void> _updatePassword(
-      int id, Map<String, dynamic> updatedPassword) async {
+      int id, Password updatedPassword) async {
     // 密码存储前进行加密
-    updatedPassword["password"] =
-        secureEncrypt(updatedPassword["password"], widget.secureHash);
+    updatedPassword.password =
+        secureEncrypt(updatedPassword.password, widget.secureHash);
     await _database
-        .update('passwords', updatedPassword, where: 'id = ?', whereArgs: [id]);
+        .update('passwords', updatedPassword.toMap(), where: 'id = ?', whereArgs: [id]);
     setState(() {
       _isStale = true;
     });
@@ -157,28 +159,31 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     _loadPasswords();
   }
 
-  void _showAddPasswordDialog({Map<String, dynamic>? passwordToUpdate}) {
-    Map<String, dynamic>? mutablePasswordToUpdate;
+  void _showAddPasswordDialog({Password? passwordToUpdate}) {
+    Password? decryptedPassword;
 
     if (passwordToUpdate != null) {
-      // Create a mutable copy of the passwordToUpdate map
-      mutablePasswordToUpdate = Map<String, dynamic>.from(passwordToUpdate);
-      mutablePasswordToUpdate["password"] =
-          secureDecrypt(mutablePasswordToUpdate["password"], widget.secureHash);
+      decryptedPassword = passwordToUpdate.copyWith(
+        password: secureDecrypt(passwordToUpdate.password, widget.secureHash),
+      );
     }
 
     showDialog(
       context: context,
       builder: (context) {
         return PasswordDialog(
-          context: context,
-          passwordToUpdate: mutablePasswordToUpdate,
-          onSave: (newPassword) {
+          passwordToUpdate: decryptedPassword,
+          onSave: (Password newPassword) {
             if (passwordToUpdate == null) {
               _addPassword(newPassword);
             } else {
-              newPassword['created_at'] = mutablePasswordToUpdate!['created_at'];
-              _updatePassword(mutablePasswordToUpdate['id'], newPassword);
+              _updatePassword(
+                passwordToUpdate.id!,
+                newPassword.copyWith(
+                  id: passwordToUpdate.id,
+                  createdAt: passwordToUpdate.createdAt,
+                ),
+              );
             }
           },
         );
@@ -222,7 +227,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
     }
   }
 
-  void _showPasswordDetails(Map<String, dynamic> password) {
+  void _showPasswordDetails(Password password) {
     showDialog(
       context: context,
       builder: (context) {
@@ -236,14 +241,15 @@ class _PasswordListScreenState extends State<PasswordListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Password Manager'),
+            Text(localizations?.passwordManager ?? 'Password Manager'),
             Text(
-              'Database: ${widget.username}',
+              '${localizations?.database ?? 'Database'}: ${widget.username}',
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
             ),
           ],
@@ -255,24 +261,23 @@ class _PasswordListScreenState extends State<PasswordListScreen>
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: localizations?.search ?? 'Search',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
           Expanded(
             child: _filteredPasswords.isEmpty
-                ? const Center(child: Text('No passwords found.'))
+                ? Center(child: Text(localizations?.noPasswordsFound ?? 'No passwords found.'))
                 : ListView.builder(
                     itemCount: _filteredPasswords.length,
                     itemBuilder: (context, index) {
                       final password = _filteredPasswords[index];
                       return Card(
                         child: ListTile(
-                          title: Text(password['title']),
-                          // subtitle: Text(password['account']),
+                          title: Text(password.title),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -288,7 +293,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
                               IconButton(
                                 icon: const Icon(Icons.delete),
                                 onPressed: () =>
-                                    _confirmDeletePassword(password['id']),
+                                    _confirmDeletePassword(password.id!),
                               ),
                             ],
                           ),
@@ -306,7 +311,7 @@ class _PasswordListScreenState extends State<PasswordListScreen>
                     ? () => _changePage(_currentPage - 1)
                     : null,
               ),
-              Text('Page ${_currentPage + 1}'),
+              Text('${localizations?.page ?? 'Page'} ${_currentPage + 1}'),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
                 onPressed:
@@ -340,6 +345,8 @@ class _PasswordListScreenState extends State<PasswordListScreen>
         debugPrint("Uploading database to S3...");
         await _uploadDatabase();
       }
+      // 清空剪贴板，防止密码残留
+      await Clipboard.setData(const ClipboardData(text: ''));
       await windowManager.destroy(); // 允许窗口关闭
     }
   }

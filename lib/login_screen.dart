@@ -72,12 +72,10 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     if (_usernameController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty) {
       String secureHash =
-          "${_passwordController.text}__mypwbox__${_usernameController.text}";
-      secureHash = hashN(secureHash, 100);
+          computeSecureHash(_usernameController.text, _passwordController.text);
 
       final directory = await getApplicationDocumentsDirectory();
-      String dbName = "__mypwbox__${_usernameController.text}";
-      dbName = hashN(dbName, 100);
+      String dbName = computeDbName(_usernameController.text);
       final dbPath = path.join(directory.path, dbName);
       bool databaseExists = await databaseFactory.databaseExists(dbPath);
       if (!databaseExists) {
@@ -108,8 +106,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     }
 
     final directory = await getApplicationDocumentsDirectory();
-    String dbName = "__mypwbox__${_usernameController.text}";
-    dbName = hashN(dbName, 100);
+    String dbName = computeDbName(_usernameController.text);
     final dbPath = path.join(directory.path, dbName);
 
     bool databaseExists = await databaseFactory.databaseExists(dbPath);
@@ -121,8 +118,7 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
     }
 
     String secureHash =
-        "${_passwordController.text}__mypwbox__${_usernameController.text}";
-    secureHash = hashN(secureHash, 100);
+        computeSecureHash(_usernameController.text, _passwordController.text);
 
     try {
       await createDatabase(dbPath, secureHash);

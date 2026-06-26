@@ -17,6 +17,26 @@ class Password {
     required this.updatedAt,
   });
 
+  Password copyWith({
+    int? id,
+    String? title,
+    String? account,
+    String? password,
+    String? comment,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Password(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      account: account ?? this.account,
+      password: password ?? this.password,
+      comment: comment ?? this.comment,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -35,7 +55,7 @@ class Password {
       title: map['title'],
       account: map['account'],
       password: map['password'],
-      comment: map['comment'],
+      comment: map['comment'] ?? '',
       createdAt: DateTime.parse(map['created_at']),
       updatedAt: DateTime.parse(map['updated_at']),
     );
