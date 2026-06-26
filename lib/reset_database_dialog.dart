@@ -6,6 +6,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'password.dart';
 import 'dart:io';
 import 'l10n/app_localizations.dart'; // Import AppLocalizations
+import 'theme/app_theme.dart';
 
 class ResetDatabaseDialog extends StatefulWidget {
   const ResetDatabaseDialog({super.key});
@@ -97,7 +98,13 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
     final localizations = AppLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(localizations!.resetPassword!),
+      title: Row(
+        children: [
+          const Icon(Icons.key, color: Color(0xFF818CF8)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(localizations!.resetPassword!)),
+        ],
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -105,6 +112,7 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
             controller: _usernameController,
             decoration: InputDecoration(labelText: localizations.username!),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _oldPasswordController,
             obscureText: !_isOldPasswordVisible,
@@ -124,11 +132,13 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _newPasswordController,
             obscureText: !_isNewPasswordVisible,
             decoration: InputDecoration(
               labelText: localizations.password!,
+              helperText: 'Enter your new master password',
               suffixIcon: IconButton(
                 icon: Icon(
                   _isNewPasswordVisible
@@ -150,8 +160,11 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(localizations.cancel!),
         ),
-        ElevatedButton(
+        GradientButton(
           onPressed: _modifyPassword,
+          expanded: false,
+          padding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Text(localizations.confirm!),
         ),
       ],

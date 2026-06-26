@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart'; // Import AppLocalizations
+import 'theme/app_theme.dart';
 
 class S3ConfigScreen extends StatefulWidget {
   const S3ConfigScreen({super.key});
@@ -51,73 +52,127 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
     );
   }
 
+  Widget _buildSectionHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 8),
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFFA5B4FC),
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(localizations.s3Config ?? 'S3 配置')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              SwitchListTile(
-                title: Text(localizations.offlineMode ?? '离线模式'),
-                value: _offline,
-                onChanged: (value) {
-                  setState(() {
-                    _offline = value;
-                  });
-                },
+      appBar: GradientAppBar(title: Text(localizations.s3Config ?? 'S3 配置')),
+      body: GradientBackground(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- Group 1: Mode ---
+                  _buildSectionHeader('Mode'),
+                  GlassCard(
+                    child: SwitchListTile(
+                      title: Text(localizations.offlineMode ?? '离线模式'),
+                      subtitle: Text(
+                        _offline
+                            ? 'Cloud sync is disabled'
+                            : 'Cloud sync is enabled',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                      value: _offline,
+                      onChanged: (value) {
+                        setState(() {
+                          _offline = value;
+                        });
+                      },
+                    ),
+                  ),
+                  // --- Group 2 & 3: Only show when online ---
+                  if (!_offline) ...[
+                    // --- Group 2: Connection ---
+                    _buildSectionHeader('Connection'),
+                    GlassCard(
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            initialValue: _endpoint,
+                            decoration: InputDecoration(
+                                labelText:
+                                    localizations.endpoint ?? 'Endpoint'),
+                            onSaved: (value) => _endpoint = value ?? '',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            initialValue: _accessKeyID,
+                            decoration: InputDecoration(
+                                labelText: localizations.accessKeyID ??
+                                    'Access Key ID'),
+                            onSaved: (value) => _accessKeyID = value ?? '',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            initialValue: _secretAccessKey,
+                            decoration: InputDecoration(
+                                labelText: localizations.secretAccessKey ??
+                                    'Secret Access Key'),
+                            onSaved: (value) => _secretAccessKey = value ?? '',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            initialValue: _bucketName,
+                            decoration: InputDecoration(
+                                labelText:
+                                    localizations.bucketName ?? 'Bucket Name'),
+                            onSaved: (value) => _bucketName = value ?? '',
+                          ),
+                        ],
+                      ),
+                    ),
+                    // --- Group 3: Storage Path ---
+                    _buildSectionHeader('Storage Path'),
+                    GlassCard(
+                      child: TextFormField(
+                        initialValue: _dirpath,
+                        decoration: InputDecoration(
+                            labelText: localizations.directoryPath ??
+                                'Directory Path'),
+                        onSaved: (value) => _dirpath = value ?? '',
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: GradientButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState!.save();
+                          _saveConfig();
+                        }
+                      },
+                      child: Text(localizations.saveConfig ?? '保存配置'),
+                    ),
+                  ),
+                ],
               ),
-              if (!_offline) ...[
-                TextFormField(
-                  initialValue: _endpoint,
-                  decoration: InputDecoration(
-                      labelText: localizations.endpoint ?? 'Endpoint'),
-                  onSaved: (value) => _endpoint = value ?? '',
-                ),
-                TextFormField(
-                  initialValue: _accessKeyID,
-                  decoration: InputDecoration(
-                      labelText: localizations.accessKeyID ?? 'Access Key ID'),
-                  onSaved: (value) => _accessKeyID = value ?? '',
-                ),
-                TextFormField(
-                  initialValue: _secretAccessKey,
-                  decoration: InputDecoration(
-                      labelText:
-                          localizations.secretAccessKey ?? 'Secret Access Key'),
-                  onSaved: (value) => _secretAccessKey = value ?? '',
-                ),
-                TextFormField(
-                  initialValue: _bucketName,
-                  decoration: InputDecoration(
-                      labelText: localizations.bucketName ?? 'Bucket Name'),
-                  onSaved: (value) => _bucketName = value ?? '',
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  initialValue: _dirpath,
-                  decoration: InputDecoration(
-                      labelText:
-                          localizations.directoryPath ?? 'Directory Path'),
-                  onSaved: (value) => _dirpath = value ?? '',
-                ),
-                const SizedBox(height: 20),
-              ],
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    _saveConfig();
-                  }
-                },
-                child: Text(localizations.saveConfig ?? '保存配置'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
