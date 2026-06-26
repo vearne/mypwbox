@@ -1,13 +1,14 @@
 // In PasswordDetailsDialog.dart
 import 'package:flutter/material.dart';
 import 'package:mypwbox/helpers.dart';
+import 'package:mypwbox/password.dart';
 import 'dart:async';
 import 'package:otp/otp.dart';
 import 'l10n/app_localizations.dart'; // Import localization file
 import 'package:flutter/services.dart'; // 导入剪贴板服务
 
 class PasswordDetailsDialog extends StatefulWidget {
-  final Map<String, dynamic> password;
+  final Password password;
   final String secureHash;
 
   const PasswordDetailsDialog({super.key, 
@@ -21,6 +22,7 @@ class PasswordDetailsDialog extends StatefulWidget {
 
 class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
   Timer? _timer;
+  Timer? _clipboardTimer;
   bool _isPasswordVisible = false;
   bool _isTotp = false;
   int _timeRemaining = 30;
@@ -63,7 +65,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
   void initState() {
     super.initState();
     String password =
-        secureDecrypt(widget.password['password'], widget.secureHash);
+        secureDecrypt(widget.password.password, widget.secureHash);
     // 判断是否是TOTP密钥
     if (password.startsWith('otpauth://totp/')) {
       _isTotp = true;
@@ -110,16 +112,16 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${l10n?.title}: ${widget.password['title']}'),
+            Text('${l10n?.title}: ${widget.password.title}'),
             const SizedBox(height: 10),
-            Text('${l10n?.account}: ${widget.password['account']}'),
+            Text('${l10n?.account}: ${widget.password.account}'),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Expanded(
                   child: Text(
-                      '${l10n?.password}: ${_isPasswordVisible ? secureDecrypt(widget.password['password'], widget.secureHash) : '********'}'),
+                      '${l10n?.password}: ${_isPasswordVisible ? secureDecrypt(widget.password.password, widget.secureHash) : '********'}'),
                 ),
                 IconButton(
                   icon: Icon(_isPasswordVisible
@@ -136,25 +138,33 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                   icon: const Icon(Icons.copy), // 复制图标
                   onPressed: () {
                     // 复制密码到剪贴板
-                    final password = secureDecrypt(widget.password['password'], widget.secureHash);
+                    final password = secureDecrypt(widget.password.password, widget.secureHash);
                     Clipboard.setData(ClipboardData(text: password)).then((_) {
-                      // 可选：显示一个提示，表示密码已复制
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n?.passwordCopied ?? 'Password copied!')),
+                        SnackBar(content: Text(l10n?.passwordCopied ?? 'Password copied! Clipboard clears in 30s.')),
                       );
+                      // 30s 后自动清空剪贴板（仅当剪贴板内容未变时）
+                      _clipboardTimer?.cancel();
+                      _clipboardTimer = Timer(const Duration(seconds: 30), () {
+                        Clipboard.getData(Clipboard.kTextPlain).then((data) {
+                          if (data?.text == password) {
+                            Clipboard.setData(const ClipboardData(text: ''));
+                          }
+                        });
+                      });
                     });
                   },
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text('${l10n?.comment}: ${widget.password['comment']}'),
+            Text('${l10n?.comment}: ${widget.password.comment}'),
             const SizedBox(height: 10),
             Text(
-                '${l10n?.createdAt}: ${_formatDate(widget.password['created_at'])}'),
+                '${l10n?.createdAt}: ${_formatDate(widget.password.createdAt.toIso8601String())}'),
             const SizedBox(height: 10),
             Text(
-                '${l10n?.updatedAt}: ${_formatDate(widget.password['updated_at'])}'),
+                '${l10n?.updatedAt}: ${_formatDate(widget.password.updatedAt.toIso8601String())}'),
             if (_isTotp) ...[
               const SizedBox(height: 20),
               Text('TOTP: $_totpCode'),

@@ -68,7 +68,7 @@ int hashStringToUint64(String input) {
 String generateRandomString(int length) {
   const String chars =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-+,';
-  final Random random = Random();
+  final Random random = Random.secure();
 
   return List.generate(length, (index) => chars[random.nextInt(chars.length)])
       .join();
@@ -93,4 +93,14 @@ Future<Database> createDatabase(String dbPath, String secureHash) async {
                   ''');
     },
   );
+}
+
+/// 根据用户名和密码计算数据库加密密钥
+String computeSecureHash(String username, String password) {
+  return hashN('${password}__mypwbox__${username}', 100);
+}
+
+/// 根据用户名计算数据库文件名
+String computeDbName(String username) {
+  return hashN('__mypwbox__${username}', 100);
 }
