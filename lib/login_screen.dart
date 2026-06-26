@@ -9,6 +9,7 @@ import 's3_config_screen.dart';
 import 'package:window_manager/window_manager.dart';
 import 'reset_database_dialog.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -160,57 +161,110 @@ class _LoginScreenState extends State<LoginScreen> with WindowListener {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          child: Column(
-            children: [
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                    labelText: localizations?.username ?? 'Username'),
-              ),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscureText,
-                enableSuggestions: false,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: localizations?.password ?? 'Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText; // 切换显示/隐藏
-                      });
-                    },
+      body: GradientBackground(
+        child: Center(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: GlassCard(
+                padding: const EdgeInsets.all(32),
+                child: Form(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // App icon
+                      const Icon(
+                        Icons.lock_outline,
+                        size: 56,
+                        color: Color(0xFF818CF8),
+                      ),
+                      const SizedBox(height: 16),
+                      // App name
+                      const Text(
+                        'mypwbox',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Tagline subtitle
+                      Text(
+                        localizations?.login ?? 'Login',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      // Username field
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: localizations?.username ?? 'Username',
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Password field
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscureText,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        decoration: InputDecoration(
+                          labelText: localizations?.password ?? 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureText
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureText = !_obscureText; // 切换显示/隐藏
+                              });
+                            },
+                          ),
+                        ),
+                        onSubmitted: (value) {
+                          _onLogin(); // Trigger login on Enter key press
+                        },
+                      ),
+                      const SizedBox(height: 28),
+                      // Login button (primary action)
+                      GradientButton(
+                        onPressed: _onLogin,
+                        child: Text(localizations?.login ?? 'Login'),
+                      ),
+                      const SizedBox(height: 16),
+                      // Secondary actions row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: _createDatabase,
+                            child: Text(localizations?.createDatabase ??
+                                'Create Database'),
+                          ),
+                          const SizedBox(width: 12),
+                          TextButton(
+                            onPressed: _showResetPasswordDialog,
+                            child: Text(
+                                localizations?.resetPassword ?? 'Reset Password'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                onSubmitted: (value) {
-                  _onLogin(); // Trigger login on Enter key press
-                },
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _onLogin,
-                child: Text(localizations?.login ?? 'Login'),
-              ),
-              const SizedBox(height: 10),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                ElevatedButton(
-                  onPressed: _createDatabase,
-                  child:
-                      Text(localizations?.createDatabase ?? 'Create Database'),
-                ),
-                const SizedBox(width: 10), // 添加间距
-                ElevatedButton(
-                  onPressed: _showResetPasswordDialog,
-                  child: Text(localizations?.resetPassword ?? 'Reset Password'),
-                ),
-              ])
-            ],
+            ),
           ),
         ),
       ),

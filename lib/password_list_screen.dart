@@ -13,6 +13,7 @@ import 'package:window_manager/window_manager.dart';
 import 'helpers.dart';
 import 'password_dialog.dart';
 import 'l10n/app_localizations.dart'; // Import localization file
+import 'theme/app_theme.dart';
 
 class PasswordListScreen extends StatefulWidget {
   final String username;
@@ -255,71 +256,136 @@ class _PasswordListScreenState extends State<PasswordListScreen>
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: localizations?.search ?? 'Search',
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(),
+      body: GradientBackground(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: localizations?.search ?? 'Search',
+                  prefixIcon: const Icon(Icons.search),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: _filteredPasswords.isEmpty
-                ? Center(child: Text(localizations?.noPasswordsFound ?? 'No passwords found.'))
-                : ListView.builder(
-                    itemCount: _filteredPasswords.length,
-                    itemBuilder: (context, index) {
-                      final password = _filteredPasswords[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(password.title),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.visibility),
-                                onPressed: () => _showPasswordDetails(password),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () => _showAddPasswordDialog(
-                                    passwordToUpdate: password),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () =>
-                                    _confirmDeletePassword(password.id!),
-                              ),
-                            ],
+            Expanded(
+              child: _filteredPasswords.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.lock_outline,
+                              size: 64, color: Colors.white24),
+                          const SizedBox(height: 16),
+                          Text(
+                            localizations?.noPasswordsFound ??
+                                'No passwords found.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 16,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _filteredPasswords.length,
+                      itemBuilder: (context, index) {
+                        final password = _filteredPasswords[index];
+                        return GlassCard(
+                          padding: EdgeInsets.zero,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFF312E81),
+                              child: Text(
+                                password.title.isNotEmpty
+                                    ? password.title[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              password.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            subtitle: Text(
+                              password.account,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 13,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.visibility),
+                                  onPressed: () =>
+                                      _showPasswordDetails(password),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => _showAddPasswordDialog(
+                                      passwordToUpdate: password),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () =>
+                                      _confirmDeletePassword(password.id!),
+                                ),
+                              ],
+                            ),
+                            onTap: () => _showPasswordDetails(password),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            GlassCard(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 0
+                        ? () => _changePage(_currentPage - 1)
+                        : null,
                   ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPage > 0
-                    ? () => _changePage(_currentPage - 1)
-                    : null,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      '${localizations?.page ?? 'Page'} ${_currentPage + 1}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _hasNextPage
+                        ? () => _changePage(_currentPage + 1)
+                        : null,
+                  ),
+                ],
               ),
-              Text('${localizations?.page ?? 'Page'} ${_currentPage + 1}'),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed:
-                    _hasNextPage ? () => _changePage(_currentPage + 1) : null,
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddPasswordDialog(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'password.dart';
 import 'l10n/app_localizations.dart';
+import 'theme/app_theme.dart';
 
 class PasswordDialog extends StatefulWidget {
   final Password? passwordToUpdate;
@@ -40,16 +41,30 @@ class _PasswordDialogState extends State<PasswordDialog> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final titleText = widget.passwordToUpdate == null
+        ? localizations!.add!
+        : localizations!.update!;
 
     return AlertDialog(
-      title: Text(widget.passwordToUpdate == null
-          ? localizations!.add!
-          : localizations!.update!),
+      title: Row(
+        children: [
+          Icon(
+            widget.passwordToUpdate == null
+                ? Icons.add_circle
+                : Icons.edit,
+            color: const Color(0xFF818CF8),
+          ),
+          const SizedBox(width: 8),
+          Text(titleText),
+        ],
+      ),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(labelText: localizations.title),
@@ -60,6 +75,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _accountController,
                 decoration: InputDecoration(labelText: localizations.account),
@@ -71,6 +87,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscureText,
@@ -95,8 +112,10 @@ class _PasswordDialogState extends State<PasswordDialog> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _commentController,
+                maxLines: 3,
                 decoration: InputDecoration(labelText: localizations.comment),
               ),
             ],
@@ -108,7 +127,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(localizations.cancel!),
         ),
-        ElevatedButton(
+        GradientButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               final newPassword = Password(
@@ -124,6 +143,9 @@ class _PasswordDialogState extends State<PasswordDialog> {
               Navigator.pop(context);
             }
           },
+          expanded: false,
+          padding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Text(widget.passwordToUpdate == null
               ? localizations.add!
               : localizations.update!),
