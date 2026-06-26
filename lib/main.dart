@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mypwbox/l10n/app_localizations.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   // 确保 Flutter 框架初始化完成
@@ -105,9 +106,9 @@ class MyApp extends StatelessWidget {
         Locale('en', ''),
         Locale('zh', ''),
       ],
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
       home: const LoginScreen(),
       // 默认显示登录界面
       routes: {
