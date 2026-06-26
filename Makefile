@@ -13,7 +13,7 @@ build-dirs: clean
 
 .PHONY: build
 build: build-dirs
-	flutter build macos --release
+	flutter build macos --release --universal
 
 .PHONY: dmg
 dmg: build
