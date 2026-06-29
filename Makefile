@@ -1,4 +1,4 @@
-VERSION := v0.1.0
+VERSION := v0.2.1
 
 RELEASE_DIR = dist
 DMG_NAME = mypwbox_$(VERSION).dmg
@@ -13,7 +13,7 @@ build-dirs: clean
 
 .PHONY: build
 build: build-dirs
-	flutter build macos --release --universal
+	flutter build macos --release
 
 .PHONY: dmg
 dmg: build
