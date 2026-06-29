@@ -18,7 +18,7 @@ void main() async {
   // 配置窗口选项
   WindowOptions windowOptions = const WindowOptions(
     title: 'mypwbox',
-    // size: Size(800, 600),
+    size: Size(800, 700),
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
