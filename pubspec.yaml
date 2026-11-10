@@ -34,7 +34,7 @@ dependencies:
   sqflite: ^2.0.0+4  # 确保使用正确的版本
   path: ^1.8.0
   path_provider: ^2.0.10
-  intl: 0.20.2
+  intl: ^0.20.3
   crypto: ^3.0.0
   otp: 3.1.4
   cupertino_icons: ^1.0.6
