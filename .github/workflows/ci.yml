@@ -1,0 +1,133 @@
+# CI pipeline for mypwbox (macOS desktop app).
+#
+# Triggered on:
+#   - push to master: lint/test -> version check -> build dmg -> GitHub Release
+#     (release only happens when the Makefile VERSION tag does not exist yet)
+#   - pull requests: lint/test only
+#
+# Release semantics: merges that do NOT bump `VERSION :=` in the Makefile
+# produce no release (the tag already exists -> skipped). Bump the version
+# (Makefile + pubspec.yaml, keep them in sync) to cut a release.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Rapid successive pushes to master queue up instead of cancelling;
+# the tag-existence check in release-check makes redundant runs no-ops.
+# PR runs are cancelled when superseded by a newer push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. Lint + tests (cheap ubuntu runner; no macOS needed here)
+  # ------------------------------------------------------------------
+  lint-test:
+    name: Analyze & Test (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to the version used locally for reproducible builds.
+      # Bump this together with your local `flutter upgrade`.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  # ------------------------------------------------------------------
+  # 2. Version resolution & release dedup (cheap ubuntu runner)
+  #    - Makefile VERSION must match pubspec.yaml version (semantic part)
+  #    - skip release if the tag already exists
+  # ------------------------------------------------------------------
+  release-check:
+    name: Version Check (ubuntu)
+    needs: lint-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      tag: ${{ steps.versions.outputs.tag }}
+      dmg: ${{ steps.versions.outputs.dmg }}
+      should_release: ${{ steps.tag_check.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve & cross-check versions
+        id: versions
+        run: |
+          MAKEFILE_VERSION="$(grep '^VERSION' Makefile | awk '{print $3}')"
+          PUBSPEC_SEMVER="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+
+          echo "Makefile VERSION : ${MAKEFILE_VERSION}"
+          echo "pubspec version  : ${PUBSPEC_SEMVER}"
+
+          if [ "v${PUBSPEC_SEMVER}" != "${MAKEFILE_VERSION}" ]; then
+            echo "::error::Version mismatch — Makefile '${MAKEFILE_VERSION}' vs pubspec.yaml '${PUBSPEC_SEMVER}'. Sync them before merging."
+            exit 1
+          fi
+
+          echo "tag=${MAKEFILE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "dmg=mypwbox_${MAKEFILE_VERSION}.dmg" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether tag already exists
+        id: tag_check
+        run: |
+          TAG="${{ steps.versions.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "::notice::Tag ${TAG} already released — skipping release build."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ------------------------------------------------------------------
+  # 3. Build dmg + create GitHub Release (expensive macOS runner,
+  #    only reached when a NEW version tag is pending)
+  # ------------------------------------------------------------------
+  release-build:
+    name: Release (macos)
+    needs: [lint-test, release-check]
+    runs-on: macos-latest
+    if: needs.release-check.outputs.should_release == 'true'
+    permissions:
+      contents: write # required to create the tag and the release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build dmg
+        run: make dmg
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-check.outputs.tag }}
+          name: ${{ needs.release-check.outputs.tag }}
+          files: ${{ needs.release-check.outputs.dmg }}
+          generate_release_notes: true
