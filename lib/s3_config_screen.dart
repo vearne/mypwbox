@@ -10,10 +10,10 @@ class S3ConfigScreen extends StatefulWidget {
   const S3ConfigScreen({super.key});
 
   @override
-  _S3ConfigScreenState createState() => _S3ConfigScreenState();
+  S3ConfigScreenState createState() => S3ConfigScreenState();
 }
 
-class _S3ConfigScreenState extends State<S3ConfigScreen> {
+class S3ConfigScreenState extends State<S3ConfigScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _offline = true;
   bool _obscureSecret = true; // 控制是否显示明文
@@ -56,6 +56,7 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
     await prefs.setString('secretAccessKey', _secretAccessKey);
     await prefs.setString('bucketName', _bucketName);
     await prefs.setString('dirpath', _dirpath);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(AppLocalizations.of(context)!.saveConfig ?? '配置已保存')),

@@ -12,10 +12,10 @@ class ResetDatabaseDialog extends StatefulWidget {
   const ResetDatabaseDialog({super.key});
 
   @override
-  _ResetDatabaseDialogState createState() => _ResetDatabaseDialogState();
+  ResetDatabaseDialogState createState() => ResetDatabaseDialogState();
 }
 
-class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
+class ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
   late Database _oldDatabase;
   late Database _newDatabase;
 
@@ -53,6 +53,7 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
         version: 1,
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(localizations!.incorrectUsernamePassword!)));
       return;
@@ -83,11 +84,13 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
       }
 
       await _newDatabase.close();
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(localizations!.resetPassword!)));
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${localizations!.error!}: $e')));
     }

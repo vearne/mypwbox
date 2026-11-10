@@ -1,4 +1,4 @@
-VERSION := v0.2.3
+VERSION := v0.2.4
 
 RELEASE_DIR = dist
 DMG_NAME = mypwbox_$(VERSION).dmg
@@ -6,6 +6,10 @@ DMG_NAME = mypwbox_$(VERSION).dmg
 .PHONY: clean
 clean: ## Remove release binaries
 	rm -rf $(RELEASE_DIR)
+
+.PHONY: lint
+lint: ## Run static analysis
+	flutter analyze
 
 .PHONY: build-dirs
 build-dirs: clean
