@@ -98,6 +98,7 @@ class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
     final localizations = AppLocalizations.of(context);
 
     return AlertDialog(
+      constraints: const BoxConstraints(minWidth: 480, maxWidth: 480),
       title: Row(
         children: [
           const Icon(Icons.key, color: Color(0xFF818CF8)),
