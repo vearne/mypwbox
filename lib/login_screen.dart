@@ -15,10 +15,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with WindowListener {
+class LoginScreenState extends State<LoginScreen> with WindowListener {
   bool _obscureText = true; // 控制是否显示明文
 
   final _usernameController = TextEditingController();

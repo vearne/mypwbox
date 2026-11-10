@@ -22,10 +22,10 @@ class PasswordListScreen extends StatefulWidget {
   const PasswordListScreen({super.key, required this.username, required this.secureHash});
 
   @override
-  _PasswordListScreenState createState() => _PasswordListScreenState();
+  PasswordListScreenState createState() => PasswordListScreenState();
 }
 
-class _PasswordListScreenState extends State<PasswordListScreen>
+class PasswordListScreenState extends State<PasswordListScreen>
     with WindowListener {
   late Database _database;
   List<Password> _filteredPasswords = [];

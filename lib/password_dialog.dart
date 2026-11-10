@@ -14,10 +14,10 @@ class PasswordDialog extends StatefulWidget {
   });
 
   @override
-  _PasswordDialogState createState() => _PasswordDialogState();
+  PasswordDialogState createState() => PasswordDialogState();
 }
 
-class _PasswordDialogState extends State<PasswordDialog> {
+class PasswordDialogState extends State<PasswordDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _accountController;

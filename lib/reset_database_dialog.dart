@@ -12,10 +12,10 @@ class ResetDatabaseDialog extends StatefulWidget {
   const ResetDatabaseDialog({super.key});
 
   @override
-  _ResetDatabaseDialogState createState() => _ResetDatabaseDialogState();
+  ResetDatabaseDialogState createState() => ResetDatabaseDialogState();
 }
 
-class _ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
+class ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
   late Database _oldDatabase;
   late Database _newDatabase;
 

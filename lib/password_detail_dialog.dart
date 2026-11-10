@@ -18,10 +18,10 @@ class PasswordDetailsDialog extends StatefulWidget {
   });
 
   @override
-  _PasswordDetailsDialogState createState() => _PasswordDetailsDialogState();
+  PasswordDetailsDialogState createState() => PasswordDetailsDialogState();
 }
 
-class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
+class PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
   Timer? _timer;
   Timer? _clipboardTimer;
   bool _isPasswordVisible = false;
