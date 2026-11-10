@@ -53,6 +53,7 @@ class ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
         version: 1,
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(localizations!.incorrectUsernamePassword!)));
       return;
@@ -83,11 +84,13 @@ class ResetDatabaseDialogState extends State<ResetDatabaseDialog> {
       }
 
       await _newDatabase.close();
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(localizations!.resetPassword!)));
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${localizations!.error!}: $e')));
     }

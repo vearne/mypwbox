@@ -56,6 +56,7 @@ class S3ConfigScreenState extends State<S3ConfigScreen> {
     await prefs.setString('secretAccessKey', _secretAccessKey);
     await prefs.setString('bucketName', _bucketName);
     await prefs.setString('dirpath', _dirpath);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(AppLocalizations.of(context)!.saveConfig ?? '配置已保存')),

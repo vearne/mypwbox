@@ -79,6 +79,7 @@ class LoginScreenState extends State<LoginScreen> with WindowListener {
       String dbName = computeDbName(_usernameController.text);
       final dbPath = path.join(directory.path, dbName);
       bool databaseExists = await databaseFactory.databaseExists(dbPath);
+      if (!mounted) return;
       if (!databaseExists) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(AppLocalizations.of(context)?.databaseNotExist ??
@@ -111,6 +112,7 @@ class LoginScreenState extends State<LoginScreen> with WindowListener {
     final dbPath = path.join(directory.path, dbName);
 
     bool databaseExists = await databaseFactory.databaseExists(dbPath);
+    if (!mounted) return;
     if (databaseExists) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)?.databaseExists ??
@@ -123,6 +125,7 @@ class LoginScreenState extends State<LoginScreen> with WindowListener {
 
     try {
       await createDatabase(dbPath, secureHash);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context)?.databaseCreated ??
               'Database created successfully')));

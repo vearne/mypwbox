@@ -171,22 +171,23 @@ class PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy),
-                    onPressed: () {
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
                       final password = secureDecrypt(
                           widget.password.password, widget.secureHash);
-                      Clipboard.setData(ClipboardData(text: password)).then((_) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(l10n?.passwordCopied ??
-                                  'Password copied! Clipboard clears in 30s.')),
-                        );
-                        _clipboardTimer?.cancel();
-                        _clipboardTimer = Timer(const Duration(seconds: 30), () {
-                          Clipboard.getData(Clipboard.kTextPlain).then((data) {
-                            if (data?.text == password) {
-                              Clipboard.setData(const ClipboardData(text: ''));
-                            }
-                          });
+                      await Clipboard.setData(ClipboardData(text: password));
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(
+                            content: Text(l10n?.passwordCopied ??
+                                'Password copied! Clipboard clears in 30s.')),
+                      );
+                      _clipboardTimer?.cancel();
+                      _clipboardTimer = Timer(const Duration(seconds: 30), () {
+                        Clipboard.getData(Clipboard.kTextPlain).then((data) {
+                          if (data?.text == password) {
+                            Clipboard.setData(const ClipboardData(text: ''));
+                          }
                         });
                       });
                     },

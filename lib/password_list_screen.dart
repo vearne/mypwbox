@@ -59,6 +59,7 @@ class PasswordListScreenState extends State<PasswordListScreen>
       _loadPasswords();
     } catch (e) {
       debugPrint('Database open failed, Incorrect username or password: $e');
+      if (!mounted) return;
       // 密码错误，显示弹窗提示用户
       showDialog(
         context: context,
@@ -464,6 +465,7 @@ class PasswordListScreenState extends State<PasswordListScreen>
         final eTag = await minio.fPutObject(bucketName, key, dbPath);
         debugPrint("upload file [$dbPath] to: [$key], eTag: $eTag");
       } catch (e) {
+        if (!mounted) return;
         debugPrint('${AppLocalizations.of(context)!.uploadFailed!} $e');
       }
     }
