@@ -46,6 +46,7 @@ class _PasswordDialogState extends State<PasswordDialog> {
         : localizations!.update!;
 
     return AlertDialog(
+      constraints: const BoxConstraints(minWidth: 480, maxWidth: 480),
       title: Row(
         children: [
           Icon(

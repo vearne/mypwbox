@@ -108,6 +108,7 @@ class _PasswordDetailsDialogState extends State<PasswordDetailsDialog> {
     final l10n = AppLocalizations.of(context);
 
     return AlertDialog(
+      constraints: const BoxConstraints(minWidth: 480, maxWidth: 480),
       title: Text(l10n?.title ?? 'Title'),
       content: SingleChildScrollView(
         child: Column(
