@@ -59,6 +59,7 @@ class AppLocalizations {
       'uploadingDatabase': 'Uploading database to S3...',
       'uploadFailed': 'Failed to upload database to S3:',
       'passwordCopied': 'Password copied! Clipboard clears in 30s.',
+      'copiedToClipboard': 'Copied to clipboard! Clipboard clears in 30s.',
       'page': 'Page',
       'titleRequired': 'Title is required',
       'accountRequired': 'Account is required',
@@ -90,8 +91,8 @@ class AppLocalizations {
       's3Config': 'S3 配置',
       'offlineMode': '离线模式',
       'endpoint': '端点',
-      'accessKeyID': '访问密钥 ID',
-      'secretAccessKey': '秘密访问密钥',
+      'accessKeyID': 'Access Key ID',
+      'secretAccessKey': 'Secret Access Key',
       'bucketName': '存储桶名称',
       'directoryPath': '目录路径',
       'saveConfig': '保存配置',
@@ -110,6 +111,7 @@ class AppLocalizations {
       'uploadingDatabase': '正在上传数据库到 S3...',
       'uploadFailed': '上传数据库到 S3 失败:',
       'passwordCopied': '密码已复制，30秒后自动清空剪贴板。',
+      'copiedToClipboard': '已复制到剪贴板，30秒后自动清空。',
       'page': '页',
       'titleRequired': '标题不能为空',
       'accountRequired': '账户不能为空',
@@ -162,6 +164,7 @@ class AppLocalizations {
   String? get uploadFailed => _localizedValues[locale.languageCode]?['uploadFailed'];
   String? get exitConfirmation => _localizedValues[locale.languageCode]?['exitConfirmation'];
   String? get passwordCopied => _localizedValues[locale.languageCode]?['passwordCopied'];
+  String? get copiedToClipboard => _localizedValues[locale.languageCode]?['copiedToClipboard'];
   String? get page => _localizedValues[locale.languageCode]?['page'];
   String? get titleRequired => _localizedValues[locale.languageCode]?['titleRequired'];
   String? get accountRequired => _localizedValues[locale.languageCode]?['accountRequired'];
