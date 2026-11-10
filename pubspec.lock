@@ -150,14 +150,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.0.0"
-  flutter_localization:
-    dependency: "direct main"
-    description:
-      name: flutter_localization
-      sha256: "09ba1346e2fb0da970e23c6d2558c826c1dbc126a8dfc25923df30852605e722"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.3.0"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
