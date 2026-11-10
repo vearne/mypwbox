@@ -56,6 +56,7 @@ make clean                # Remove dist/
 - **i18n**: All user-facing strings go through `AppLocalizations.of(context)`, with `?? 'fallback'` null-coalescing
 - **Tests**: Minimal — only `test/helpers_test.dart` (crypto round-trip) is meaningful; `test/widget_test.dart` is an empty stub
 - **No CI/CD**: No GitHub Actions or pre-commit hooks
+- **Version sync check (MANDATORY before every commit)**: Compare `version:` in `pubspec.yaml` (e.g. `0.2.2+1`) with `VERSION :=` in `Makefile` (e.g. `v0.2.2`) — compare only the semantic part (strip the `v` prefix and `+build` suffix). If they differ, STOP and prompt the user before committing; suggest syncing the stale one. The release version of record is `Makefile`'s `VERSION` (drives git tags and the dmg filename); `pubspec.yaml` drives the app bundle version in `Info.plist` (via `FLUTTER_BUILD_NAME`).
 
 ## Dependencies of Note
 
