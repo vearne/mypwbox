@@ -1,5 +1,7 @@
 // lib/s3_config_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // 导入剪贴板服务
 import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart'; // Import AppLocalizations
 import 'theme/app_theme.dart';
@@ -14,16 +16,24 @@ class S3ConfigScreen extends StatefulWidget {
 class _S3ConfigScreenState extends State<S3ConfigScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _offline = true;
+  bool _obscureSecret = true; // 控制是否显示明文
   String _endpoint = '';
   String _accessKeyID = '';
   String _secretAccessKey = '';
   String _bucketName = '';
   String _dirpath = '';
+  Timer? _clipboardTimer;
 
   @override
   void initState() {
     super.initState();
     _loadConfig();
+  }
+
+  @override
+  void dispose() {
+    _clipboardTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadConfig() async {
@@ -129,9 +139,56 @@ class _S3ConfigScreenState extends State<S3ConfigScreen> {
                           const SizedBox(height: 16),
                           TextFormField(
                             initialValue: _secretAccessKey,
+                            obscureText: _obscureSecret,
                             decoration: InputDecoration(
                                 labelText: localizations.secretAccessKey ??
-                                    'Secret Access Key'),
+                                    'Secret Access Key',
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(_obscureSecret
+                                          ? Icons.visibility
+                                          : Icons.visibility_off),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscureSecret = !_obscureSecret;
+                                        });
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.copy),
+                                      onPressed: () async {
+                                        await Clipboard.setData(
+                                            ClipboardData(
+                                                text: _secretAccessKey));
+                                        if (!context.mounted) return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(localizations
+                                                      .copiedToClipboard ??
+                                                  'Copied to clipboard! Clipboard clears in 30s.')),
+                                        );
+                                        _clipboardTimer?.cancel();
+                                        _clipboardTimer = Timer(
+                                            const Duration(seconds: 30), () {
+                                          Clipboard.getData(
+                                                  Clipboard.kTextPlain)
+                                              .then((data) {
+                                            if (data?.text ==
+                                                _secretAccessKey) {
+                                              Clipboard.setData(
+                                                  const ClipboardData(
+                                                      text: ''));
+                                            }
+                                          });
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                )),
+                            onChanged: (value) => _secretAccessKey = value,
                             onSaved: (value) => _secretAccessKey = value ?? '',
                           ),
                           const SizedBox(height: 16),
